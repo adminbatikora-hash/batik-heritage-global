@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 
 const products = [
-  { id: "1", name: "Royal Parang Silk Shirt", sku: "BHG-MEN-001", price: 189, stock: 15, status: "Active", category: "Men Batik" },
-  { id: "2", name: "Mega Mendung Dress", sku: "BHG-WMN-001", price: 259, stock: 8, status: "Active", category: "Women Batik" },
-  { id: "3", name: "Kawung Premium Blazer", sku: "BHG-MEN-002", price: 349, stock: 5, status: "Active", category: "Men Batik" },
-  { id: "4", name: "Truntum Elegant Gown", sku: "BHG-WMN-002", price: 499, stock: 3, status: "Low Stock", category: "Women Batik" },
-  { id: "5", name: "Sogan Classic Kemeja", sku: "BHG-MEN-003", price: 149, stock: 22, status: "Active", category: "Men Batik" },
-  { id: "6", name: "Ceplok Modern Blouse", sku: "BHG-WMN-003", price: 179, stock: 0, status: "Out of Stock", category: "Women Batik" },
+  { id: "1", name: "Royal Parang Silk Shirt", sku: "BTK-MEN-001", price: 189, stock: 15, status: "Active", category: "Men Batik" },
+  { id: "2", name: "Mega Mendung Dress", sku: "BTK-WMN-001", price: 259, stock: 8, status: "Active", category: "Women Batik" },
+  { id: "3", name: "Kawung Premium Blazer", sku: "BTK-MEN-002", price: 349, stock: 5, status: "Active", category: "Men Batik" },
+  { id: "4", name: "Truntum Elegant Gown", sku: "BTK-WMN-002", price: 499, stock: 3, status: "Low Stock", category: "Women Batik" },
+  { id: "5", name: "Sogan Classic Kemeja", sku: "BTK-MEN-003", price: 149, stock: 22, status: "Active", category: "Men Batik" },
+  { id: "6", name: "Ceplok Modern Blouse", sku: "BTK-WMN-003", price: 179, stock: 0, status: "Out of Stock", category: "Women Batik" },
 ];
 
 export default function AdminProducts() {

@@ -26,7 +26,7 @@ const PRODUCT_DATA = {
   id: "1",
   name: "Royal Parang Silk Shirt",
   slug: "royal-parang-silk-shirt",
-  sku: "BHG-MEN-001",
+  sku: "BTK-MEN-001",
   price: 189,
   compareAt: 249,
   description:

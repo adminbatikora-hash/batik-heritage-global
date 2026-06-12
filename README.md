@@ -1,8 +1,8 @@
-# 🏮 Batik Heritage Global
+# 🏮 Batikora
 
 A world-class premium Indonesian Batik eCommerce platform for international customers. Built with Next.js 15, featuring glassmorphism UI, luxury design aesthetics, and full-stack capabilities.
 
-![Batik Heritage Global](https://img.shields.io/badge/Next.js-15-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4) ![Prisma](https://img.shields.io/badge/Prisma-5-2D3748)
+![Batikora](https://img.shields.io/badge/Next.js-15-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4) ![Prisma](https://img.shields.io/badge/Prisma-5-2D3748)
 
 ## ✨ Features
 
@@ -220,4 +220,4 @@ CMD ["npm", "start"]
 
 ## 📄 License
 
-© 2024 Batik Heritage Global. All rights reserved.
+© 2024 Batikora. All rights reserved.

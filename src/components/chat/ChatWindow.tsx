@@ -72,7 +72,7 @@ function ModeSelection({ onClose }: { onClose: () => void }) {
         <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
           <MessageSquare className="w-7 h-7" />
         </div>
-        <h3 className="font-bold text-lg">Batik Heritage Support</h3>
+        <h3 className="font-bold text-lg">Batikora Support</h3>
         <p className="text-white/70 text-xs mt-1">How would you like to chat?</p>
       </div>
 
@@ -88,7 +88,7 @@ function ModeSelection({ onClose }: { onClose: () => void }) {
                 <Bot className="w-6 h-6 text-secondary" />
               </div>
               <div>
-                <h4 className="font-semibold text-sm">AI Assistant</h4>
+                <h4 className="font-semibold text-sm">Batikora AI</h4>
                 <p className="text-xs text-foreground/50 mt-0.5">
                   Instant answers 24/7 — product info, shipping, returns
                 </p>
@@ -226,7 +226,7 @@ function AIChatView({ onClose }: { onClose: () => void }) {
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-primary" />
           </div>
           <div>
-            <h4 className="font-semibold text-sm">AI Assistant</h4>
+            <h4 className="font-semibold text-sm">Batikora AI</h4>
             <p className="text-[11px] text-white/70">
               {isTyping ? "Typing..." : "Online"}
             </p>
@@ -436,7 +436,7 @@ function ChatInput({
       </div>
       <div className="flex items-center justify-center gap-1 mt-2">
         <Sparkles className="w-3 h-3 text-accent" />
-        <span className="text-[10px] text-foreground/30">Batik Heritage Support</span>
+        <span className="text-[10px] text-foreground/30">Batikora Support</span>
       </div>
     </div>
   );

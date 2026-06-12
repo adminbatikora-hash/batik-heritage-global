@@ -48,11 +48,11 @@ const stats = [
 ];
 
 const recentOrders = [
-  { id: "BHG-A7X9-K2M", customer: "Sarah Mitchell", total: "$349", status: "Shipped", date: "2 hours ago" },
-  { id: "BHG-B3F1-N8P", customer: "James Thompson", total: "$189", status: "Processing", date: "4 hours ago" },
-  { id: "BHG-C5H2-Q4R", customer: "Yuki Tanaka", total: "$499", status: "Paid", date: "6 hours ago" },
-  { id: "BHG-D8J4-T6S", customer: "Marie Dubois", total: "$259", status: "Delivered", date: "1 day ago" },
-  { id: "BHG-E1K6-V9W", customer: "Hans Mueller", total: "$178", status: "Pending", date: "1 day ago" },
+  { id: "BTK-A7X9-K2M", customer: "Sarah Mitchell", total: "$349", status: "Shipped", date: "2 hours ago" },
+  { id: "BTK-B3F1-N8P", customer: "James Thompson", total: "$189", status: "Processing", date: "4 hours ago" },
+  { id: "BTK-C5H2-Q4R", customer: "Yuki Tanaka", total: "$499", status: "Paid", date: "6 hours ago" },
+  { id: "BTK-D8J4-T6S", customer: "Marie Dubois", total: "$259", status: "Delivered", date: "1 day ago" },
+  { id: "BTK-E1K6-V9W", customer: "Hans Mueller", total: "$178", status: "Pending", date: "1 day ago" },
 ];
 
 const topProducts = [

@@ -1,5 +1,5 @@
 export const SITE_CONFIG = {
-  name: "Batik Heritage Global",
+  name: "Batikora",
   description:
     "Discover authentic Indonesian Batik masterpieces crafted by skilled artisans. Premium handcrafted batik delivered worldwide.",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",

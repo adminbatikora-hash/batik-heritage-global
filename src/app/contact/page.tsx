@@ -5,7 +5,7 @@ import ContactForm from "@/components/contact/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "Get in touch with Batik Heritage Global. We're here to help with orders, custom requests, and any questions.",
+  description: "Get in touch with Batikora. We're here to help with orders, custom requests, and any questions.",
 };
 
 export default function ContactPage() {

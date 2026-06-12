@@ -1,4 +1,4 @@
-// AI Knowledge Base for the Batik Heritage Global store
+// AI Knowledge Base for the Batikora store
 // This simulates RAG (Retrieval Augmented Generation) responses
 
 import { IntentType } from "./types";
@@ -30,7 +30,7 @@ const KNOWLEDGE_BASE = {
   },
   returns: {
     policy: "30-day return policy for unworn items in original packaging",
-    process: "Email support@batikheritage.global with your order number. We'll send a prepaid return label.",
+    process: "Email support@batikora.com with your order number. We'll send a prepaid return label.",
     refundTime: "Refunds processed within 5-7 business days after we receive the item",
     exchanges: "Free exchanges available for different sizes or colors",
     exceptions: "Custom-made and sale items are final sale",
@@ -46,14 +46,14 @@ const KNOWLEDGE_BASE = {
     { q: "How do I care for batik?", a: "Hand wash in cold water with mild detergent. Do not wring. Dry flat in shade. Iron on low heat on reverse side." },
     { q: "Do you offer custom orders?", a: "Yes! We offer custom batik pieces. Contact us with your design ideas and we'll connect you with our artisans." },
     { q: "What's your customer service hours?", a: "Our AI assistant is available 24/7. Human agents are available Mon-Fri 9AM-6PM WIB (GMT+7)." },
-    { q: "Do you offer wholesale pricing?", a: "Yes! For orders of 50+ pieces, we offer wholesale pricing. Email wholesale@batikheritage.global." },
+    { q: "Do you offer wholesale pricing?", a: "Yes! For orders of 50+ pieces, we offer wholesale pricing. Email wholesale@batikora.com." },
   ],
   store: {
-    name: "Batik Heritage Global",
+    name: "Batikora",
     founded: "2009",
     mission: "Bringing authentic Indonesian Batik to the world while empowering artisan communities",
     location: "Jl. Malioboro No. 123, Yogyakarta, Indonesia",
-    email: "hello@batikheritage.global",
+    email: "hello@batikora.com",
     phone: "+62 274 123 456",
     hours: "Mon-Fri 9AM-6PM WIB, Sat 9AM-3PM WIB",
   },
@@ -113,7 +113,7 @@ export function generateAIResponse(message: string, intent: IntentType): string 
       return `Here are our shipping options:\n\n📦 **Standard** - ${kb.shipping.methods[0].days} (${kb.shipping.methods[0].cost})\n🚀 **Express** - ${kb.shipping.methods[1].days} ($25)\n⚡ **Priority** - ${kb.shipping.methods[2].days} ($45)\n✈️ **Overnight** - ${kb.shipping.methods[3].days} ($75)\n\n${kb.shipping.countries}\n\nWhich shipping option works best for you?`;
 
     case "refund_request":
-      return `I understand you'd like to make a return. Here's our policy:\n\n✅ **30-day return window** for unworn items\n✅ **Free exchanges** for size/color\n✅ Refund processed in **5-7 business days**\n\n**How to return:**\n1. Email support@batikheritage.global with your order number\n2. We'll send a prepaid return label\n3. Ship the item in original packaging\n\nWould you like me to help you start a return? Please share your order number.`;
+      return `I understand you'd like to make a return. Here's our policy:\n\n✅ **30-day return window** for unworn items\n✅ **Free exchanges** for size/color\n✅ Refund processed in **5-7 business days**\n\n**How to return:**\n1. Email support@batikora.com with your order number\n2. We'll send a prepaid return label\n3. Ship the item in original packaging\n\nWould you like me to help you start a return? Please share your order number.`;
 
     case "payment_inquiry":
       return `We accept multiple payment methods:\n\n💳 **Credit/Debit Cards** - Visa, Mastercard, Amex\n🅿️ **PayPal** - Including Pay Later (pay in 4)\n🏦 **Bank Transfer** - Available in select countries\n\n🔒 All payments are encrypted with 256-bit SSL\n💱 We accept: USD, EUR, GBP, AUD, SGD, JPY\n\nIs there something specific about payment I can help with?`;
@@ -122,22 +122,22 @@ export function generateAIResponse(message: string, intent: IntentType): string 
       return `I'm truly sorry to hear about your experience. Your satisfaction is our top priority, and I want to make this right.\n\nCould you please share:\n1. Your order number\n2. What happened\n\nI'll escalate this to our senior team immediately. We typically resolve complaints within 24 hours. Is there anything else I should know?`;
 
     case "order_status":
-      return `I'd be happy to check your order status! 📦\n\nCould you please provide:\n• Your **order number** (starts with BHG-)\n• Or the **email** used for the order\n\nI'll look it up right away. You can also check anytime at:\nMy Account → Order History`;
+      return `I'd be happy to check your order status! 📦\n\nCould you please provide:\n• Your **order number** (starts with BTK-)\n• Or the **email** used for the order\n\nI'll look it up right away. You can also check anytime at:\nMy Account → Order History`;
 
     case "technical_support":
       return `I'm sorry you're experiencing technical issues. Let me help!\n\nCommon solutions:\n• **Clear browser cache** and try again\n• **Try a different browser** (Chrome/Firefox recommended)\n• **Check internet connection**\n\nIf the issue persists, could you tell me:\n1. What you were trying to do\n2. What error you're seeing\n3. Which device/browser you're using\n\nI'll make sure this gets resolved quickly!`;
 
     default:
-      return `Hello! 👋 Welcome to Batik Heritage Global. I'm your AI assistant and I'm here to help!\n\nI can assist you with:\n• 🛍️ **Product recommendations** & details\n• 📦 **Shipping** information\n• 💳 **Payment** questions\n• 🔄 **Returns** & refunds\n• 📋 **Order tracking**\n\nWhat can I help you with today?`;
+      return `Hello! 👋 Welcome to Batikora. I'm your AI assistant and I'm here to help!\n\nI can assist you with:\n• 🛍️ **Product recommendations** & details\n• 📦 **Shipping** information\n• 💳 **Payment** questions\n• 🔄 **Returns** & refunds\n• 📋 **Order tracking**\n\nWhat can I help you with today?`;
   }
 }
 
 export function getWelcomeMessage(): string {
-  return `Hello! 👋 Welcome to **Batik Heritage Global**.\n\nI'm your AI shopping assistant. I can help you with:\n\n• Finding the perfect batik piece\n• Shipping & delivery info\n• Order tracking\n• Returns & exchanges\n• Payment questions\n\nHow can I assist you today?`;
+  return `Hello! 👋 Welcome to **Batikora**.\n\nI'm your AI shopping assistant. I can help you with:\n\n• Finding the perfect batik piece\n• Shipping & delivery info\n• Order tracking\n• Returns & exchanges\n• Payment questions\n\nHow can I assist you today?`;
 }
 
 export function getAwayMessage(): string {
-  return `Thank you for reaching out! 🙏\n\nOur human agents are currently offline (available Mon-Fri 9AM-6PM WIB).\n\nBut don't worry — I'm an AI assistant and I can help with most questions! Just type your question and I'll do my best.\n\nFor urgent matters, email: support@batikheritage.global`;
+  return `Thank you for reaching out! 🙏\n\nOur human agents are currently offline (available Mon-Fri 9AM-6PM WIB).\n\nBut don't worry — I'm an AI assistant and I can help with most questions! Just type your question and I'll do my best.\n\nFor urgent matters, email: support@batikora.com`;
 }
 
 export function getQuickReplies(): string[] {

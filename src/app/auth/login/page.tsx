@@ -29,7 +29,7 @@ export default function LoginPage() {
           <Link href="/" className="inline-block">
             <Image
               src="/logo.png"
-              alt="Batik Heritage Global"
+              alt="Batikora"
               width={160}
               height={48}
               className="h-12 w-auto mx-auto"

@@ -44,7 +44,7 @@ export default function AdminSidebar() {
         <Link href="/admin" className="flex items-center space-x-2">
           <Image
             src="/logo.png"
-            alt="Batik Heritage Global"
+            alt="Batikora"
             width={120}
             height={36}
             className="h-9 w-auto brightness-0 invert"

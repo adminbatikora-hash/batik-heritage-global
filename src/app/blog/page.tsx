@@ -4,7 +4,7 @@ import Footer from "@/components/layout/Footer";
 import BlogList from "@/components/blog/BlogList";
 
 export const metadata: Metadata = {
-  title: "Blog | Batik Heritage Stories",
+  title: "Blog | Batikora Stories",
   description:
     "Explore the rich history of Indonesian Batik, artisan stories, fashion trends, and cultural insights.",
 };

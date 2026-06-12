@@ -262,7 +262,7 @@ export default function CategoryCollection({ slug, title, description, heroGradi
       image: product.image,
       size: product.sizes[1] || product.sizes[0],
       quantity: 1,
-      sku: `BHG-${product.id}`,
+      sku: `BTK-${product.id}`,
       slug: product.slug,
     });
     toast.success(`${product.name} added to cart!`);

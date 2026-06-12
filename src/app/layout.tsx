@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   },
   description: SITE_CONFIG.description,
   keywords: SITE_CONFIG.keywords,
-  authors: [{ name: "Batik Heritage Global" }],
-  creator: "Batik Heritage Global",
+  authors: [{ name: "Batikora" }],
+  creator: "Batikora",
   openGraph: {
     type: "website",
     locale: "en_US",

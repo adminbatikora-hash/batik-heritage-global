@@ -69,7 +69,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center space-x-2">
               <Image
                 src="/logo.png"
-                alt="Batik Heritage Global"
+                alt="Batikora"
                 width={140}
                 height={40}
                 className="h-10 w-auto"

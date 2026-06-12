@@ -10,11 +10,11 @@ async function main() {
   const adminPassword = await bcrypt.hash("BatikAdmin2024!", 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@batikheritage.global" },
+    where: { email: "admin@batikora.com" },
     update: {},
     create: {
-      name: "Admin Batik Heritage",
-      email: "admin@batikheritage.global",
+      name: "Admin Batikora",
+      email: "admin@batikora.com",
       password: adminPassword,
       role: "ADMIN",
       phone: "+62 274 123 456",
@@ -26,11 +26,11 @@ async function main() {
   const managerPassword = await bcrypt.hash("BatikManager2024!", 12);
 
   const manager = await prisma.user.upsert({
-    where: { email: "manager@batikheritage.global" },
+    where: { email: "manager@batikora.com" },
     update: {},
     create: {
-      name: "Manager Batik Heritage",
-      email: "manager@batikheritage.global",
+      name: "Manager Batikora",
+      email: "manager@batikora.com",
       password: managerPassword,
       role: "MANAGER",
       phone: "+62 274 123 457",
@@ -84,7 +84,7 @@ async function main() {
         slug: "royal-parang-silk-shirt",
         description: "The Royal Parang pattern is one of the most prestigious motifs in Indonesian Batik, historically reserved for royalty. This premium silk shirt features hand-drawn Parang patterns using traditional canting tools, created over 30 days of meticulous work by master artisan Pak Hadi from Yogyakarta.",
         shortDesc: "Hand-drawn Parang pattern on premium mulberry silk",
-        sku: "BHG-MEN-001",
+        sku: "BTK-MEN-001",
         price: 189,
         compareAt: 249,
         cost: 65,
@@ -102,7 +102,7 @@ async function main() {
         slug: "kawung-premium-blazer",
         description: "The Kawung motif represents the sugar palm fruit and symbolizes purity. This premium blazer combines traditional Kawung batik with modern tailoring, perfect for formal occasions and business meetings.",
         shortDesc: "Luxury Kawung motif blazer for formal occasions",
-        sku: "BHG-MEN-002",
+        sku: "BTK-MEN-002",
         price: 349,
         compareAt: 429,
         cost: 120,
@@ -120,7 +120,7 @@ async function main() {
         slug: "sogan-classic-kemeja",
         description: "Classic Sogan batik in warm earth tones, a timeless piece rooted in Javanese tradition. The natural brown dyes give this shirt its distinctive warm character that deepens with age.",
         shortDesc: "Classic Sogan batik in warm earth tones",
-        sku: "BHG-MEN-003",
+        sku: "BTK-MEN-003",
         price: 149,
         compareAt: null,
         cost: 48,
@@ -138,7 +138,7 @@ async function main() {
         slug: "mega-mendung-dress",
         description: "The Mega Mendung (cloud) pattern from Cirebon represents patience and grandeur. This elegant dress features hand-stamped cloud motifs in rich blue gradients on premium cotton.",
         shortDesc: "Cloud motif dress from Cirebon in rich blue gradients",
-        sku: "BHG-WMN-001",
+        sku: "BTK-WMN-001",
         price: 259,
         compareAt: null,
         cost: 85,
@@ -156,7 +156,7 @@ async function main() {
         slug: "truntum-elegant-gown",
         description: "Truntum means 'blooming love' and is traditionally worn at Javanese weddings. This elegant gown features delicate Truntum patterns on pure silk, hand-drawn by master artisan Bu Siti.",
         shortDesc: "Symbol of blooming love on pure silk gown",
-        sku: "BHG-WMN-002",
+        sku: "BTK-WMN-002",
         price: 499,
         compareAt: null,
         cost: 165,
@@ -174,7 +174,7 @@ async function main() {
         slug: "ceplok-modern-blouse",
         description: "Geometric Ceplok patterns meet modern fashion in this versatile blouse. Perfect for office wear or casual outings, it blends traditional artistry with contemporary design.",
         shortDesc: "Geometric Ceplok patterns in modern blouse style",
-        sku: "BHG-WMN-003",
+        sku: "BTK-WMN-003",
         price: 179,
         compareAt: 219,
         cost: 55,
@@ -339,8 +339,8 @@ async function main() {
 
   // ==================== SITE SETTINGS ====================
   const settings = [
-    { key: "store_name", value: "Batik Heritage Global" },
-    { key: "store_email", value: "hello@batikheritage.global" },
+    { key: "store_name", value: "Batikora" },
+    { key: "store_email", value: "hello@batikora.com" },
     { key: "store_phone", value: "+62 274 123 456" },
     { key: "store_address", value: "Jl. Malioboro No. 123, Yogyakarta, Indonesia 55271" },
     { key: "store_currency", value: "USD" },
@@ -379,12 +379,12 @@ async function main() {
   console.log("═══════════════════════════════════════════");
   console.log("  ADMIN CREDENTIALS");
   console.log("═══════════════════════════════════════════");
-  console.log("  Email:    admin@batikheritage.global");
+  console.log("  Email:    admin@batikora.com");
   console.log("  Password: BatikAdmin2024!");
   console.log("═══════════════════════════════════════════");
   console.log("  MANAGER CREDENTIALS");
   console.log("═══════════════════════════════════════════");
-  console.log("  Email:    manager@batikheritage.global");
+  console.log("  Email:    manager@batikora.com");
   console.log("  Password: BatikManager2024!");
   console.log("═══════════════════════════════════════════");
   console.log("  CUSTOMER CREDENTIALS (Demo)");

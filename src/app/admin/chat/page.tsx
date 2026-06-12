@@ -43,7 +43,7 @@ const conversations = [
     customer: "James Thompson",
     email: "james@example.com",
     avatar: "JT",
-    lastMessage: "I'd like to return my order BHG-A7X9",
+    lastMessage: "I'd like to return my order BTK-A7X9",
     time: "5 min ago",
     unread: 1,
     status: "waiting",
@@ -386,8 +386,8 @@ export default function AdminChatPage() {
             <h5 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2">Recent Orders</h5>
             <div className="space-y-2">
               {[
-                { id: "BHG-A7X9", item: "Royal Parang Shirt", total: "$189", status: "Delivered" },
-                { id: "BHG-B3F1", item: "Kawung Blazer", total: "$349", status: "Shipped" },
+                { id: "BTK-A7X9", item: "Royal Parang Shirt", total: "$189", status: "Delivered" },
+                { id: "BTK-B3F1", item: "Kawung Blazer", total: "$349", status: "Shipped" },
               ].map((order) => (
                 <div key={order.id} className="p-2 bg-gray-50 rounded-lg">
                   <div className="flex justify-between items-start">

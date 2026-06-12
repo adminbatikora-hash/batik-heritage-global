@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard | Batik Heritage Global",
+  title: "Admin Dashboard | Batikora",
   robots: { index: false, follow: false },
 };
 

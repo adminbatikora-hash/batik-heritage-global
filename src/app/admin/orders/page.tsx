@@ -5,12 +5,12 @@ import { motion } from "framer-motion";
 import { Search, Filter, Eye, Printer, Package } from "lucide-react";
 
 const orders = [
-  { id: "BHG-A7X9-K2M", customer: "Sarah Mitchell", email: "sarah@example.com", total: 349, items: 2, status: "Shipped", payment: "Paid", date: "2024-12-10" },
-  { id: "BHG-B3F1-N8P", customer: "James Thompson", email: "james@example.com", total: 189, items: 1, status: "Processing", payment: "Paid", date: "2024-12-10" },
-  { id: "BHG-C5H2-Q4R", customer: "Yuki Tanaka", email: "yuki@example.com", total: 499, items: 1, status: "Paid", payment: "Paid", date: "2024-12-09" },
-  { id: "BHG-D8J4-T6S", customer: "Marie Dubois", email: "marie@example.com", total: 259, items: 1, status: "Delivered", payment: "Paid", date: "2024-12-08" },
-  { id: "BHG-E1K6-V9W", customer: "Hans Mueller", email: "hans@example.com", total: 178, items: 1, status: "Pending", payment: "Unpaid", date: "2024-12-08" },
-  { id: "BHG-F2L7-X1Y", customer: "Emily Chen", email: "emily@example.com", total: 698, items: 3, status: "Cancelled", payment: "Refunded", date: "2024-12-07" },
+  { id: "BTK-A7X9-K2M", customer: "Sarah Mitchell", email: "sarah@example.com", total: 349, items: 2, status: "Shipped", payment: "Paid", date: "2024-12-10" },
+  { id: "BTK-B3F1-N8P", customer: "James Thompson", email: "james@example.com", total: 189, items: 1, status: "Processing", payment: "Paid", date: "2024-12-10" },
+  { id: "BTK-C5H2-Q4R", customer: "Yuki Tanaka", email: "yuki@example.com", total: 499, items: 1, status: "Paid", payment: "Paid", date: "2024-12-09" },
+  { id: "BTK-D8J4-T6S", customer: "Marie Dubois", email: "marie@example.com", total: 259, items: 1, status: "Delivered", payment: "Paid", date: "2024-12-08" },
+  { id: "BTK-E1K6-V9W", customer: "Hans Mueller", email: "hans@example.com", total: 178, items: 1, status: "Pending", payment: "Unpaid", date: "2024-12-08" },
+  { id: "BTK-F2L7-X1Y", customer: "Emily Chen", email: "emily@example.com", total: 698, items: 3, status: "Cancelled", payment: "Refunded", date: "2024-12-07" },
 ];
 
 const statusColors: Record<string, string> = {

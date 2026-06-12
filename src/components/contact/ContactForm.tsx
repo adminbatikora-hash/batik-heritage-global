@@ -12,12 +12,12 @@ const contactInfo = [
   {
     icon: Phone,
     title: "Call Us",
-    details: ["+62 274 123 456", "+1 (800) BATIK-HG"],
+    details: ["+62 274 123 456", "+1 (800) BATIKORA"],
   },
   {
     icon: Mail,
     title: "Email Us",
-    details: ["hello@batikheritage.global", "support@batikheritage.global"],
+    details: ["hello@batikora.com", "support@batikora.com"],
   },
   {
     icon: Clock,

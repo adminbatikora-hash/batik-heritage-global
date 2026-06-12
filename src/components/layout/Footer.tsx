@@ -94,7 +94,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center space-x-2">
               <Image
                 src="/logo.png"
-                alt="Batik Heritage Global"
+                alt="Batikora"
                 width={140}
                 height={40}
                 className="h-10 w-auto brightness-0 invert"
@@ -193,7 +193,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2 text-sm text-white/50">
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                <span>hello@batikheritage.global</span>
+                <span>hello@batikora.com</span>
               </li>
             </ul>
           </div>
@@ -205,7 +205,7 @@ export default function Footer() {
         <div className="container-luxury mx-auto px-4 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-white/40">
-              © {new Date().getFullYear()} Batik Heritage Global. All rights
+              © {new Date().getFullYear()} Batikora. All rights
               reserved.
             </p>
             <div className="flex items-center gap-6">

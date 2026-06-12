@@ -83,7 +83,7 @@ export default function AboutContent() {
                 From the Heart of <span className="gradient-text-gold">Java</span>
               </h2>
               <p className="text-foreground/60 mt-4 leading-relaxed">
-                Founded in 2009, Batik Heritage Global began with a simple mission:
+                Founded in 2009, Batikora began with a simple mission:
                 to share the extraordinary beauty of Indonesian Batik with the world
                 while creating sustainable income for artisan communities.
               </p>
