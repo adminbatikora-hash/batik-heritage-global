@@ -9,7 +9,3 @@ cmds = ["npx prisma generate", "npm run build"]
 
 [start]
 cmd = "npm start"
-
-[variables]
-PORT = "8080"
-HOSTNAME = "0.0.0.0"
