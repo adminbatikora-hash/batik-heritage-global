@@ -1,0 +1,13 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npx prisma generate && npm run build",
+  "installCommand": "npm install",
+  "regions": ["sin1"],
+  "env": {
+    "DATABASE_URL": "@database-url",
+    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "NEXTAUTH_URL": "@nextauth-url",
+    "NEXT_PUBLIC_PAYPAL_CLIENT_ID": "@paypal-client-id",
+    "NEXT_PUBLIC_APP_URL": "@app-url"
+  }
+}
