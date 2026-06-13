@@ -4,15 +4,10 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function createPrismaClient() {
-  try {
-    return new PrismaClient({
-      log: process.env.NODE_ENV === "development" ? ["query"] : [],
-    });
-  } catch (e) {
-    console.error("Failed to create Prisma client:", e);
-    return new PrismaClient();
-  }
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["query"] : [],
+  });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
