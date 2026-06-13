@@ -5,4 +5,4 @@ nixPkgs = ["...", "openssl"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "HOSTNAME=0.0.0.0 node_modules/.bin/next start -H 0.0.0.0 -p ${PORT:-3000}"
+cmd = "next start -H 0.0.0.0 --port ${PORT-3000}"
