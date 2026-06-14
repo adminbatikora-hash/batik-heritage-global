@@ -12,9 +12,13 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get("maxPrice");
     const search = searchParams.get("search");
 
-    const where: Record<string, unknown> = {
-      published: true,
-    };
+    const where: Record<string, unknown> = {};
+
+    // Only filter published for public (non-admin) requests
+    const admin = searchParams.get("admin");
+    if (!admin) {
+      where.published = true;
+    }
 
     if (category) {
       where.category = { slug: category };
@@ -52,8 +56,8 @@ export async function GET(request: NextRequest) {
       prisma.product.findMany({
         where,
         include: {
-          images: { orderBy: { position: "asc" }, take: 1 },
-          category: { select: { name: true, slug: true } },
+          images: { orderBy: { position: "asc" } },
+          category: { select: { id: true, name: true, slug: true } },
         },
         orderBy,
         skip: (page - 1) * limit,

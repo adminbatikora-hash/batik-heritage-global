@@ -27,6 +27,7 @@ interface Product {
   material: string | null;
   description: string;
   shortDesc: string | null;
+  categoryId: string;
   category: { name: string; slug: string } | null;
   images: { url: string; alt: string | null }[];
 }
@@ -73,7 +74,7 @@ export default function AdminProducts() {
 
   async function fetchProducts() {
     try {
-      const res = await fetch("/api/products?limit=100");
+      const res = await fetch("/api/products?limit=100&admin=true");
       if (res.ok) {
         const data = await res.json();
         setProducts(data.products);
@@ -201,16 +202,17 @@ export default function AdminProducts() {
       description: product.description,
       shortDesc: product.shortDesc || "",
       sku: product.sku,
-      price: String(product.price),
-      compareAt: product.compareAt ? String(product.compareAt) : "",
+      price: String(Number(product.price)),
+      compareAt: product.compareAt ? String(Number(product.compareAt)) : "",
       cost: "",
       weight: "",
       material: product.material || "",
-      categoryId: "",
+      categoryId: (product.category as unknown as { id?: string })?.id || product.categoryId || "",
       stock: String(product.stock),
       featured: product.featured,
       imageUrls: product.images.map((img) => img.url).join("\n"),
     });
+    setMediaFiles([]);
     setEditingId(product.id);
     setShowForm(true);
   }
@@ -406,11 +408,19 @@ export default function AdminProducts() {
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg overflow-hidden relative bg-gray-100 flex-shrink-0">
-                      {product.images[0] ? (
-                        <Image src={product.images[0].url} alt={product.name} fill className="object-cover" sizes="40px" />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200" />
-                      )}
+                      {product.images[0]?.url ? (
+                        <Image
+                          src={product.images[0].url}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="40px"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      ) : null}
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <span className="text-[10px] text-gray-400">IMG</span>
+                      </div>
                     </div>
                     <div>
                       <span className="font-medium">{product.name}</span>
