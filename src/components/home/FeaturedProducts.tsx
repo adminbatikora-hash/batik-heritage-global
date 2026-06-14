@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, TouchEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,7 +12,6 @@ import { useWishlistStore } from "@/store/useWishlistStore";
 import { t } from "@/lib/translations";
 import toast from "react-hot-toast";
 
-// Sample product data
 const FEATURED_PRODUCTS = [
   {
     id: "0",
@@ -66,6 +65,8 @@ const FEATURED_PRODUCTS = [
 
 function ProductCardSlider({ images, name }: { images: string[]; name: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -79,8 +80,32 @@ function ProductCardSlider({ images, name }: { images: string[]; name: string })
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  const handleTouchStart = (e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+      } else {
+        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+      }
+    }
+  };
+
   return (
-    <div className="relative w-full h-full">
+    <div
+      className="relative w-full h-full"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
@@ -102,16 +127,17 @@ function ProductCardSlider({ images, name }: { images: string[]; name: string })
 
       {images.length > 1 && (
         <>
+          {/* Arrows - always visible on mobile, hover on desktop */}
           <button
             onClick={prevImage}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white z-10"
             aria-label="Previous image"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={nextImage}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white z-10"
             aria-label="Next image"
           >
             <ChevronRightIcon className="w-4 h-4" />
@@ -140,9 +166,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-    },
+    transition: { staggerChildren: 0.15 },
   },
 };
 
@@ -256,46 +280,38 @@ export default function FeaturedProducts() {
                 {product.compareAt && (
                   <div className="absolute top-4 right-4 z-10">
                     <span className="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
-                      -
-                      {Math.round(
-                        ((product.compareAt - product.price) /
-                          product.compareAt) *
-                          100
-                      )}
-                      %
+                      -{Math.round(((product.compareAt - product.price) / product.compareAt) * 100)}%
                     </span>
                   </div>
                 )}
 
-                {/* Hover Actions */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                  <div className="hidden group-hover:flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <button
-                      onClick={(e) => handleAddToWishlist(e, product)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                        isInWishlist(product.id)
-                          ? "bg-red-500 text-white"
-                          : "bg-white hover:bg-accent hover:text-white"
-                      }`}
-                      aria-label="Add to wishlist"
-                    >
-                      <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
-                    </button>
-                    <button
-                      onClick={(e) => handleQuickView(e, product.slug)}
-                      className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:text-white transition-all"
-                      aria-label="Quick view"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => handleAddToCart(e, product)}
-                      className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:text-white transition-all"
-                      aria-label="Add to cart"
-                    >
-                      <ShoppingBag className="w-4 h-4" />
-                    </button>
-                  </div>
+                {/* Action Buttons - always visible on mobile, hover on desktop */}
+                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-300">
+                  <button
+                    onClick={(e) => handleAddToWishlist(e, product)}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                      isInWishlist(product.id)
+                        ? "bg-red-500 text-white"
+                        : "bg-white hover:bg-accent hover:text-white"
+                    }`}
+                    aria-label="Add to wishlist"
+                  >
+                    <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+                  </button>
+                  <button
+                    onClick={(e) => handleQuickView(e, product.slug)}
+                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:text-white transition-all"
+                    aria-label="Quick view"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => handleAddToCart(e, product)}
+                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:text-white transition-all"
+                    aria-label="Add to cart"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
@@ -312,18 +328,12 @@ export default function FeaturedProducts() {
                 <div className="flex items-center gap-1 mt-2">
                   <Star className="w-3 h-3 fill-accent text-accent" />
                   <span className="text-xs font-medium">{product.rating}</span>
-                  <span className="text-xs text-foreground/40">
-                    ({product.reviews})
-                  </span>
+                  <span className="text-xs text-foreground/40">({product.reviews})</span>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-lg font-bold">
-                    ${product.price}
-                  </span>
+                  <span className="text-lg font-bold">${product.price}</span>
                   {product.compareAt && (
-                    <span className="text-sm text-foreground/40 line-through">
-                      ${product.compareAt}
-                    </span>
+                    <span className="text-sm text-foreground/40 line-through">${product.compareAt}</span>
                   )}
                 </div>
               </div>

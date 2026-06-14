@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -97,6 +97,8 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
 
   const nextImage = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -114,6 +116,22 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
     setZoomPosition({ x, y });
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextImage();
+      else prevImage();
+    }
+  };
+
   return (
     <>
       <div className="space-y-4">
@@ -122,6 +140,9 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
           className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-gray-50 cursor-zoom-in group"
           onClick={() => setIsZoomed(true)}
           onMouseMove={handleMouseMove}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -153,14 +174,14 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-white"
                 aria-label="Next image"
               >
                 <ChevronRight className="w-5 h-5" />
