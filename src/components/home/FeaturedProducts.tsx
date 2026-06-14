@@ -1,9 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingBag, Eye, Star, ArrowRight } from "lucide-react";
+import { Heart, ShoppingBag, Eye, Star, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { t } from "@/lib/translations";
 
@@ -15,7 +16,7 @@ const FEATURED_PRODUCTS = [
     slug: "batik-tulis-mega-mendung-premium-cirebon",
     price: 275,
     compareAt: 350,
-    image: "/products/batik1.png",
+    images: ["/products/batik1.png", "/products/batik1B.png", "/products/batik1C.png"],
     category: "Men Batik",
     rating: 4.9,
     reviews: 47,
@@ -27,7 +28,7 @@ const FEATURED_PRODUCTS = [
     slug: "royal-parang-silk-shirt",
     price: 189,
     compareAt: 249,
-    image: "/products/batik-shirt-1.jpg",
+    images: ["/products/batik-shirt-1.jpg"],
     category: "Men Batik",
     rating: 4.9,
     reviews: 128,
@@ -39,7 +40,7 @@ const FEATURED_PRODUCTS = [
     slug: "mega-mendung-dress",
     price: 259,
     compareAt: null,
-    image: "/products/batik-dress-1.jpg",
+    images: ["/products/batik-dress-1.jpg"],
     category: "Women Batik",
     rating: 4.8,
     reviews: 96,
@@ -51,13 +52,85 @@ const FEATURED_PRODUCTS = [
     slug: "kawung-premium-blazer",
     price: 349,
     compareAt: 429,
-    image: "/products/batik-blazer-1.jpg",
+    images: ["/products/batik-blazer-1.jpg"],
     category: "Men Batik",
     rating: 4.9,
     reviews: 74,
     badge: "Limited",
   },
 ];
+
+function ProductCardSlider({ images, name }: { images: string[]; name: string }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  return (
+    <div className="relative w-full h-full">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="absolute inset-0"
+        >
+          <Image
+            src={images[currentIndex]}
+            alt={`${name} - Image ${currentIndex + 1}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prevImage}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+            aria-label="Previous image"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={nextImage}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+            aria-label="Next image"
+          >
+            <ChevronRightIcon className="w-4 h-4" />
+          </button>
+
+          {/* Dots indicator */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentIndex(idx); }}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  idx === currentIndex ? "bg-white w-4" : "bg-white/50"
+                }`}
+                aria-label={`View image ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -119,20 +192,8 @@ export default function FeaturedProducts() {
               className="group"
             >
               <div className="relative overflow-hidden rounded-2xl bg-gray-50 aspect-[3/4]">
-                {/* Product Image */}
-                {product.image ? (
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10 flex items-center justify-center">
-                    <div className="w-20 h-20 gradient-gold rounded-xl opacity-30" />
-                  </div>
-                )}
+                {/* Product Image Slider */}
+                <ProductCardSlider images={product.images} name={product.name} />
 
                 {/* Badge */}
                 {product.badge && (

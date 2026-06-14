@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Star,
   Heart,
@@ -13,16 +14,53 @@ import {
   Minus,
   Plus,
   ChevronRight,
+  ChevronLeft,
   Globe,
   Package,
+  X,
+  ZoomIn,
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { SUPPORTED_COUNTRIES, SHIPPING_METHODS } from "@/lib/constants";
 import toast from "react-hot-toast";
 
-// Mock product data
-const PRODUCT_DATA = {
+// Products data with multiple images
+const PRODUCTS_DATA: Record<string, typeof DEFAULT_PRODUCT> = {
+  "batik-tulis-mega-mendung-premium-cirebon": {
+    id: "0",
+    name: "Batik Tulis Mega Mendung Premium Cirebon",
+    slug: "batik-tulis-mega-mendung-premium-cirebon",
+    sku: "BTK-MEGA-001",
+    price: 275,
+    compareAt: 350,
+    description:
+      "Batik Tulis Mega Mendung Premium dari Cirebon, Jawa Barat, Indonesia. Motif awan bergelombang (Mega Mendung) melambangkan kesabaran dan keagungan. Dibuat dengan teknik tulis tangan menggunakan canting tradisional oleh pengrajin batik berpengalaman selama lebih dari 30 hari. Bahan katun primissima grade A dengan pewarna alami yang ramah lingkungan. Cocok untuk acara formal, pesta, pernikahan, dan koleksi seni tekstil nusantara.",
+    material: "Premium Cotton Primissima",
+    weight: "300g",
+    category: "Men Batik",
+    stock: 10,
+    rating: 4.9,
+    reviewCount: 47,
+    sizes: ["M", "L", "XL", "XXL"],
+    colors: [
+      { name: "Classic Green", hex: "#1B5E20" },
+      { name: "Deep Blue", hex: "#1A237E" },
+      { name: "Earth Brown", hex: "#4E342E" },
+    ],
+    images: ["/products/batik1.png", "/products/batik1B.png", "/products/batik1C.png"],
+    features: [
+      "Hand-drawn using traditional canting tool",
+      "100% premium cotton primissima grade A",
+      "Natural eco-friendly dyes",
+      "30+ days of meticulous artisan work",
+      "Certificate of authenticity included",
+      "UNESCO Heritage recognized Mega Mendung pattern",
+    ],
+  },
+};
+
+const DEFAULT_PRODUCT = {
   id: "1",
   name: "Royal Parang Silk Shirt",
   slug: "royal-parang-silk-shirt",
@@ -54,13 +92,203 @@ const PRODUCT_DATA = {
   ],
 };
 
+// Image Gallery with Slider and Zoom
+function ProductGallery({ images, name }: { images: string[]; name: string }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+
+  const nextImage = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  }, [images.length]);
+
+  const prevImage = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  }, [images.length]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isZoomed) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPosition({ x, y });
+  };
+
+  return (
+    <>
+      <div className="space-y-4">
+        {/* Main Image */}
+        <div
+          className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-gray-50 cursor-zoom-in group"
+          onClick={() => setIsZoomed(true)}
+          onMouseMove={handleMouseMove}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={images[currentIndex]}
+                alt={`${name} - Image ${currentIndex + 1}`}
+                fill
+                className="object-cover"
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Zoom hint */}
+          <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ZoomIn className="w-5 h-5 text-gray-600" />
+          </div>
+
+          {/* Navigation arrows */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
+          {/* Image counter */}
+          {images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
+              {currentIndex + 1} / {images.length}
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnails */}
+        {images.length > 1 && (
+          <div className="flex gap-3">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`relative w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                  idx === currentIndex
+                    ? "border-accent shadow-gold"
+                    : "border-gray-200 hover:border-accent/50"
+                }`}
+              >
+                <Image
+                  src={img}
+                  alt={`${name} thumbnail ${idx + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="80px"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Fullscreen Zoom Modal */}
+      <AnimatePresence>
+        {isZoomed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center"
+            onClick={() => setIsZoomed(false)}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setIsZoomed(false)}
+              className="absolute top-6 right-6 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+              aria-label="Close zoom"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Navigation */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                  className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+
+            {/* Zoomed Image */}
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="relative w-[90vw] h-[90vh] max-w-5xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image
+                src={images[currentIndex]}
+                alt={`${name} - Zoomed view ${currentIndex + 1}`}
+                fill
+                className="object-contain"
+                sizes="90vw"
+                quality={100}
+              />
+            </motion.div>
+
+            {/* Dots */}
+            {images.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {images.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      idx === currentIndex ? "bg-white w-6" : "bg-white/40"
+                    }`}
+                    aria-label={`View image ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 interface ProductDetailProps {
   slug: string;
 }
 
 export default function ProductDetail({ slug }: ProductDetailProps) {
+  const product = PRODUCTS_DATA[slug] || DEFAULT_PRODUCT;
   const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState(PRODUCT_DATA.colors[0]);
+  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
   const [quantity, setQuantity] = useState(1);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [activeTab, setActiveTab] = useState<"description" | "reviews" | "shipping">("description");
@@ -68,7 +296,6 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
   const addToCart = useCartStore((state) => state.addItem);
   const { addItem: addToWishlist, isInWishlist, removeItem: removeFromWishlist } = useWishlistStore();
 
-  const product = PRODUCT_DATA;
   const inWishlist = isInWishlist(product.id);
 
   const handleAddToCart = () => {
@@ -125,32 +352,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-gray-50">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-32 h-32 gradient-gold rounded-3xl mx-auto opacity-30" />
-                  <p className="text-foreground/30 mt-4 text-sm">Product Image</p>
-                </div>
-              </div>
-              {/* Discount Badge */}
-              {product.compareAt && (
-                <div className="absolute top-6 left-6">
-                  <span className="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-full">
-                    Save ${product.compareAt - product.price}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Thumbnail Row */}
-            <div className="flex gap-3 mt-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-20 h-20 rounded-xl bg-gray-100 border-2 border-transparent hover:border-accent cursor-pointer transition-all"
-                />
-              ))}
-            </div>
+            <ProductGallery images={product.images} name={product.name} />
           </motion.div>
 
           {/* Product Info */}
