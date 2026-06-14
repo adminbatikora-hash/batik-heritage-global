@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Trash2,
   Minus,
@@ -96,8 +97,20 @@ export default function CartView() {
                   className="glass-card-solid p-4 sm:p-6 flex gap-4"
                 >
                   {/* Product Image */}
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gray-100 flex-shrink-0 flex items-center justify-center">
-                    <div className="w-10 h-10 gradient-gold rounded-lg opacity-30" />
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden relative">
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-10 h-10 gradient-gold rounded-lg opacity-30" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
