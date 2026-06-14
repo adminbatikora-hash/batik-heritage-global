@@ -4,9 +4,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Heart, ShoppingBag, Eye, Star, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { useLanguageStore } from "@/store/useLanguageStore";
+import { useCartStore } from "@/store/useCartStore";
+import { useWishlistStore } from "@/store/useWishlistStore";
 import { t } from "@/lib/translations";
+import toast from "react-hot-toast";
 
 // Sample product data
 const FEATURED_PRODUCTS = [
@@ -154,6 +158,50 @@ const itemVariants = {
 export default function FeaturedProducts() {
   const { language } = useLanguageStore();
   const tr = t(language);
+  const router = useRouter();
+  const addToCart = useCartStore((state) => state.addItem);
+  const { addItem: addToWishlist, isInWishlist, removeItem: removeFromWishlist } = useWishlistStore();
+
+  const handleAddToWishlist = (e: React.MouseEvent, product: typeof FEATURED_PRODUCTS[0]) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+      toast.success("Removed from wishlist");
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+        slug: product.slug,
+      });
+      toast.success("Added to wishlist!");
+    }
+  };
+
+  const handleQuickView = (e: React.MouseEvent, slug: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/products/${slug}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: typeof FEATURED_PRODUCTS[0]) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+      size: "M",
+      color: "Default",
+      quantity: 1,
+      sku: `BTK-${product.id}`,
+      slug: product.slug,
+    });
+    toast.success("Added to cart!");
+  };
 
   return (
     <section className="section-padding bg-white">
@@ -221,30 +269,33 @@ export default function FeaturedProducts() {
 
                 {/* Hover Actions */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileHover={{ opacity: 1, y: 0 }}
-                    className="hidden group-hover:flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                  >
+                  <div className="hidden group-hover:flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                     <button
-                      className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:text-white transition-all"
+                      onClick={(e) => handleAddToWishlist(e, product)}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                        isInWishlist(product.id)
+                          ? "bg-red-500 text-white"
+                          : "bg-white hover:bg-accent hover:text-white"
+                      }`}
                       aria-label="Add to wishlist"
                     >
-                      <Heart className="w-4 h-4" />
+                      <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
                     </button>
                     <button
+                      onClick={(e) => handleQuickView(e, product.slug)}
                       className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:text-white transition-all"
                       aria-label="Quick view"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
+                      onClick={(e) => handleAddToCart(e, product)}
                       className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-accent hover:text-white transition-all"
                       aria-label="Add to cart"
                     >
                       <ShoppingBag className="w-4 h-4" />
                     </button>
-                  </motion.div>
+                  </div>
                 </div>
               </div>
 
