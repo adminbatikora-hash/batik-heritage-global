@@ -115,13 +115,24 @@ function ProductCardSlider({ images, name }: { images: string[]; name: string })
           transition={{ duration: 0.3 }}
           className="absolute inset-0"
         >
-          <Image
-            src={images[currentIndex]}
-            alt={`${name} - Image ${currentIndex + 1}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          />
+          {/\.(mp4|webm|mov)$/i.test(images[currentIndex]) ? (
+            <video
+              src={images[currentIndex]}
+              className="w-full h-full object-cover"
+              muted
+              autoPlay
+              loop
+              playsInline
+            />
+          ) : (
+            <Image
+              src={images[currentIndex]}
+              alt={`${name} - Image ${currentIndex + 1}`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            />
+          )}
         </motion.div>
       </AnimatePresence>
 

@@ -153,14 +153,25 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
               transition={{ duration: 0.3 }}
               className="absolute inset-0"
             >
-              <Image
-                src={images[currentIndex]}
-                alt={`${name} - Image ${currentIndex + 1}`}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
+              {/\.(mp4|webm|mov)$/i.test(images[currentIndex]) ? (
+                <video
+                  src={images[currentIndex]}
+                  className="w-full h-full object-cover"
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                />
+              ) : (
+                <Image
+                  src={images[currentIndex]}
+                  alt={`${name} - Image ${currentIndex + 1}`}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              )}
             </motion.div>
           </AnimatePresence>
 
@@ -210,13 +221,22 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
                     : "border-gray-200 hover:border-accent/50"
                 }`}
               >
-                <Image
-                  src={img}
-                  alt={`${name} thumbnail ${idx + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                />
+                {/\.(mp4|webm|mov)$/i.test(img) ? (
+                  <video src={img} className="w-full h-full object-cover" muted playsInline />
+                ) : (
+                  <Image
+                    src={img}
+                    alt={`${name} thumbnail ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                )}
+                {/\.(mp4|webm|mov)$/i.test(img) && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <span className="text-white text-lg">▶</span>
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -270,14 +290,24 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
               className="relative w-[90vw] h-[90vh] max-w-5xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image
-                src={images[currentIndex]}
-                alt={`${name} - Zoomed view ${currentIndex + 1}`}
-                fill
-                className="object-contain"
-                sizes="90vw"
-                quality={100}
-              />
+              {/\.(mp4|webm|mov)$/i.test(images[currentIndex]) ? (
+                <video
+                  src={images[currentIndex]}
+                  className="w-full h-full object-contain"
+                  controls
+                  autoPlay
+                  playsInline
+                />
+              ) : (
+                <Image
+                  src={images[currentIndex]}
+                  alt={`${name} - Zoomed view ${currentIndex + 1}`}
+                  fill
+                  className="object-contain"
+                  sizes="90vw"
+                  quality={100}
+                />
+              )}
             </motion.div>
 
             {/* Dots */}

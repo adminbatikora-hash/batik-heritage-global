@@ -45,6 +45,8 @@ export default function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<Array<{ url: string; type: string; name: string }>>([]);
 
   // Form state
   const [form, setForm] = useState({
@@ -97,9 +99,37 @@ export default function AdminProducts() {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("files", files[i]);
+    }
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setMediaFiles((prev) => [...prev, ...data.files]);
+        toast.success(`${data.files.length} file(s) uploaded!`);
+      } else {
+        toast.error("Upload failed");
+      }
+    } catch {
+      toast.error("Upload error");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
   function resetForm() {
     setForm({ name: "", slug: "", description: "", shortDesc: "", sku: "", price: "", compareAt: "", cost: "", weight: "", material: "", categoryId: "", stock: "", featured: false, imageUrls: "" });
     setEditingId(null);
+    setMediaFiles([]);
     setShowForm(false);
   }
 
@@ -107,10 +137,10 @@ export default function AdminProducts() {
     e.preventDefault();
     setSaving(true);
 
-    const images = form.imageUrls
-      .split("\n")
-      .filter(Boolean)
-      .map((url, i) => ({ url: url.trim(), alt: `${form.name} - Image ${i + 1}` }));
+    // Combine uploaded media files with manual URLs
+    const manualUrls = form.imageUrls.split("\n").filter(Boolean).map((url, i) => ({ url: url.trim(), alt: `${form.name} - Image ${i + 1}` }));
+    const uploadedMedia = mediaFiles.map((m, i) => ({ url: m.url, alt: `${form.name} - ${m.type === "video" ? "Video" : "Image"} ${i + 1}` }));
+    const allImages = [...uploadedMedia, ...manualUrls];
 
     const payload = {
       name: form.name,
@@ -126,7 +156,7 @@ export default function AdminProducts() {
       categoryId: form.categoryId,
       stock: parseInt(form.stock) || 0,
       featured: form.featured,
-      images: images.length > 0 ? images : undefined,
+      images: allImages.length > 0 ? allImages : undefined,
     };
 
     try {
@@ -272,9 +302,63 @@ export default function AdminProducts() {
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required rows={4} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Detailed product description for SEO..." />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium mb-1">Image URLs (one per line)</label>
-                  <textarea value={form.imageUrls} onChange={(e) => setForm({ ...form, imageUrls: e.target.value })} rows={3} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder={"/products/batik1.png\n/products/batik1B.png\n/products/batik1C.png"} />
-                  <p className="text-xs text-foreground/40 mt-1">Use paths like /products/filename.png or external URLs</p>
+                  <label className="block text-sm font-medium mb-1">Media (Images & Videos)</label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-accent/50 transition-colors">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,video/mp4,video/webm,video/mov"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                          <Plus className="w-6 h-6 text-foreground/40" />
+                        </div>
+                        <p className="text-sm font-medium">Click to upload images or videos</p>
+                        <p className="text-xs text-foreground/40">JPG, PNG, WebP, MP4, WebM (max 50MB each)</p>
+                      </div>
+                    </label>
+                  </div>
+                  {uploading && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-accent">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading files...
+                    </div>
+                  )}
+                  {/* Preview uploaded media */}
+                  {mediaFiles.length > 0 && (
+                    <div className="grid grid-cols-4 gap-3 mt-4">
+                      {mediaFiles.map((media, idx) => (
+                        <div key={idx} className="relative group rounded-lg overflow-hidden border bg-gray-50">
+                          {media.type === "video" ? (
+                            <video src={media.url} className="w-full h-20 object-cover" muted />
+                          ) : (
+                            <div className="relative w-full h-20">
+                              <Image src={media.url} alt={media.name} fill className="object-cover" sizes="100px" />
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setMediaFiles(mediaFiles.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] px-1 py-0.5 truncate">
+                            {media.type === "video" ? "🎬" : "🖼️"} {media.name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Manual URL input as fallback */}
+                  <details className="mt-3">
+                    <summary className="text-xs text-foreground/40 cursor-pointer hover:text-foreground/60">Or paste URLs manually</summary>
+                    <textarea value={form.imageUrls} onChange={(e) => setForm({ ...form, imageUrls: e.target.value })} rows={2} className="w-full mt-2 px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder={"/products/batik1.png\nhttps://example.com/video.mp4"} />
+                  </details>
                 </div>
                 <div className="col-span-2">
                   <label className="flex items-center gap-2 text-sm">
