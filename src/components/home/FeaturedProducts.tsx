@@ -10,6 +10,18 @@ import { t } from "@/lib/translations";
 // Sample product data
 const FEATURED_PRODUCTS = [
   {
+    id: "0",
+    name: "Batik Tulis Mega Mendung Premium Cirebon",
+    slug: "batik-tulis-mega-mendung-premium-cirebon",
+    price: 275,
+    compareAt: 350,
+    image: "/products/batik1.png",
+    category: "Men Batik",
+    rating: 4.9,
+    reviews: 47,
+    badge: "New Arrival",
+  },
+  {
     id: "1",
     name: "Royal Parang Silk Shirt",
     slug: "royal-parang-silk-shirt",
@@ -44,18 +56,6 @@ const FEATURED_PRODUCTS = [
     rating: 4.9,
     reviews: 74,
     badge: "Limited",
-  },
-  {
-    id: "4",
-    name: "Truntum Elegant Gown",
-    slug: "truntum-elegant-gown",
-    price: 499,
-    compareAt: null,
-    image: "/products/batik-gown-1.jpg",
-    category: "Women Batik",
-    rating: 5.0,
-    reviews: 52,
-    badge: "Exclusive",
   },
 ];
 
@@ -119,10 +119,20 @@ export default function FeaturedProducts() {
               className="group"
             >
               <div className="relative overflow-hidden rounded-2xl bg-gray-50 aspect-[3/4]">
-                {/* Product Image Placeholder */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10 flex items-center justify-center">
-                  <div className="w-20 h-20 gradient-gold rounded-xl opacity-30" />
-                </div>
+                {/* Product Image */}
+                {product.image ? (
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/10 flex items-center justify-center">
+                    <div className="w-20 h-20 gradient-gold rounded-xl opacity-30" />
+                  </div>
+                )}
 
                 {/* Badge */}
                 {product.badge && (

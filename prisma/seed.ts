@@ -80,6 +80,24 @@ async function main() {
   if (menCategory && womenCategory) {
     const products = [
       {
+        name: "Batik Tulis Mega Mendung Premium Cirebon",
+        slug: "batik-tulis-mega-mendung-premium-cirebon",
+        description: "Batik Tulis Mega Mendung Premium dari Cirebon, Jawa Barat, Indonesia. Motif awan bergelombang (Mega Mendung) melambangkan kesabaran dan keagungan. Dibuat dengan teknik tulis tangan menggunakan canting tradisional oleh pengrajin batik berpengalaman selama lebih dari 30 hari. Bahan katun primissima grade A dengan pewarna alami yang ramah lingkungan. Cocok untuk acara formal, pesta, pernikahan, dan koleksi seni tekstil nusantara. Authentic Indonesian handmade batik with natural dyes, perfect for formal events and textile art collection.",
+        shortDesc: "Batik tulis tangan premium motif Mega Mendung Cirebon - 100% handmade with natural dyes",
+        sku: "BTK-MEGA-001",
+        price: 275,
+        compareAt: 350,
+        cost: 95,
+        weight: 0.30,
+        material: "Premium Cotton Primissima",
+        categoryId: menCategory.id,
+        stock: 10,
+        featured: true,
+        rating: 4.9,
+        reviewCount: 47,
+        sold: 156,
+      },
+      {
         name: "Royal Parang Silk Shirt",
         slug: "royal-parang-silk-shirt",
         description: "The Royal Parang pattern is one of the most prestigious motifs in Indonesian Batik, historically reserved for royalty. This premium silk shirt features hand-drawn Parang patterns using traditional canting tools, created over 30 days of meticulous work by master artisan Pak Hadi from Yogyakarta.",
@@ -197,6 +215,43 @@ async function main() {
       });
     }
     console.log("✅ Products created:", products.length);
+
+    // Add images for Batik Tulis Mega Mendung
+    const megaMendungProduct = await prisma.product.findUnique({
+      where: { sku: "BTK-MEGA-001" },
+    });
+
+    if (megaMendungProduct) {
+      const existingImages = await prisma.productImage.findMany({
+        where: { productId: megaMendungProduct.id },
+      });
+
+      if (existingImages.length === 0) {
+        await prisma.productImage.createMany({
+          data: [
+            {
+              productId: megaMendungProduct.id,
+              url: "/products/batik1.png",
+              alt: "Batik Tulis Mega Mendung Premium Cirebon - Front View",
+              position: 0,
+            },
+            {
+              productId: megaMendungProduct.id,
+              url: "/products/batik1B.png",
+              alt: "Batik Tulis Mega Mendung Premium Cirebon - Detail Pattern",
+              position: 1,
+            },
+            {
+              productId: megaMendungProduct.id,
+              url: "/products/batik1C.png",
+              alt: "Batik Tulis Mega Mendung Premium Cirebon - Full Display",
+              position: 2,
+            },
+          ],
+        });
+        console.log("✅ Images added for Batik Tulis Mega Mendung");
+      }
+    }
   }
 
   // ==================== SHIPPING ZONES ====================
