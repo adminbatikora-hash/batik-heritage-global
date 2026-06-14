@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, TouchEvent } from "react";
+import { useState, useRef, TouchEvent, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -196,6 +196,34 @@ export default function FeaturedProducts() {
   const router = useRouter();
   const addToCart = useCartStore((state) => state.addItem);
   const { addItem: addToWishlist, isInWishlist, removeItem: removeFromWishlist } = useWishlistStore();
+  const [products, setProducts] = useState(FEATURED_PRODUCTS);
+
+  useEffect(() => {
+    async function fetchFeatured() {
+      try {
+        const res = await fetch("/api/products?limit=4&sort=best-selling");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.products && data.products.length > 0) {
+            const mapped = data.products.map((p: { id: string; name: string; slug: string; price: number; compareAt: number | null; images: { url: string }[]; category: { name: string }; rating: number; reviewCount: number; featured: boolean }) => ({
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              price: Number(p.price),
+              compareAt: p.compareAt ? Number(p.compareAt) : null,
+              images: p.images?.map((img) => img.url) || ["/products/placeholder.png"],
+              category: p.category?.name || "Batik",
+              rating: Number(p.rating) || 4.5,
+              reviews: p.reviewCount || 0,
+              badge: p.featured ? "Featured" : null,
+            }));
+            setProducts(mapped);
+          }
+        }
+      } catch {}
+    }
+    fetchFeatured();
+  }, []);
 
   const handleAddToWishlist = (e: React.MouseEvent, product: typeof FEATURED_PRODUCTS[0]) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -25,71 +25,25 @@ import { useWishlistStore } from "@/store/useWishlistStore";
 import { SUPPORTED_COUNTRIES, SHIPPING_METHODS } from "@/lib/constants";
 import toast from "react-hot-toast";
 
-// Products data with multiple images
-const PRODUCTS_DATA: Record<string, typeof DEFAULT_PRODUCT> = {
-  "batik-tulis-mega-mendung-premium-cirebon": {
-    id: "0",
-    name: "Batik Tulis Mega Mendung Premium Cirebon",
-    slug: "batik-tulis-mega-mendung-premium-cirebon",
-    sku: "BTK-MEGA-001",
-    price: 275,
-    compareAt: 350,
-    description:
-      "Batik Tulis Mega Mendung Premium dari Cirebon, Jawa Barat, Indonesia. Motif awan bergelombang (Mega Mendung) melambangkan kesabaran dan keagungan. Dibuat dengan teknik tulis tangan menggunakan canting tradisional oleh pengrajin batik berpengalaman selama lebih dari 30 hari. Bahan katun primissima grade A dengan pewarna alami yang ramah lingkungan. Cocok untuk acara formal, pesta, pernikahan, dan koleksi seni tekstil nusantara.",
-    material: "Premium Cotton Primissima",
-    weight: "300g",
-    category: "Men Batik",
-    stock: 10,
-    rating: 4.9,
-    reviewCount: 47,
-    sizes: ["M", "L", "XL", "XXL"],
-    colors: [
-      { name: "Classic Green", hex: "#1B5E20" },
-      { name: "Deep Blue", hex: "#1A237E" },
-      { name: "Earth Brown", hex: "#4E342E" },
-    ],
-    images: ["/products/batik1.png", "/products/batik1B.png", "/products/batik1C.png"],
-    features: [
-      "Hand-drawn using traditional canting tool",
-      "100% premium cotton primissima grade A",
-      "Natural eco-friendly dyes",
-      "30+ days of meticulous artisan work",
-      "Certificate of authenticity included",
-      "UNESCO Heritage recognized Mega Mendung pattern",
-    ],
-  },
-};
-
-const DEFAULT_PRODUCT = {
+// Products data with multiple images - fallback only
+const FALLBACK_PRODUCT = {
   id: "1",
-  name: "Royal Parang Silk Shirt",
-  slug: "royal-parang-silk-shirt",
-  sku: "BTK-MEN-001",
-  price: 189,
-  compareAt: 249,
-  description:
-    "The Royal Parang pattern is one of the most prestigious motifs in Indonesian Batik, historically reserved for royalty. This premium silk shirt features hand-drawn Parang patterns using traditional canting tools, created over 30 days of meticulous work by master artisan Pak Hadi from Yogyakarta.",
-  material: "100% Pure Silk",
-  weight: "250g",
-  category: "Men Batik",
-  stock: 15,
-  rating: 4.9,
-  reviewCount: 128,
-  sizes: ["S", "M", "L", "XL", "XXL"],
-  colors: [
-    { name: "Navy", hex: "#0F172A" },
-    { name: "Dark Brown", hex: "#3D2914" },
-    { name: "Black", hex: "#111827" },
-  ],
-  images: ["/products/batik-shirt-1.jpg"],
-  features: [
-    "Hand-drawn using traditional canting",
-    "100% pure mulberry silk",
-    "Natural dye process",
-    "30+ days of artisan work",
-    "Certificate of authenticity included",
-    "UNESCO Heritage recognized pattern",
-  ],
+  name: "Product Not Found",
+  slug: "not-found",
+  sku: "N/A",
+  price: 0,
+  compareAt: null as number | null,
+  description: "This product could not be loaded.",
+  material: "",
+  weight: "0g",
+  category: "Unknown",
+  stock: 0,
+  rating: 0,
+  reviewCount: 0,
+  sizes: [] as string[],
+  colors: [] as { name: string; hex: string }[],
+  images: [] as string[],
+  features: [] as string[],
 };
 
 // Image Gallery with Slider and Zoom
@@ -337,17 +291,69 @@ interface ProductDetailProps {
 }
 
 export default function ProductDetail({ slug }: ProductDetailProps) {
-  const product = PRODUCTS_DATA[slug] || DEFAULT_PRODUCT;
+  const [product, setProduct] = useState(FALLBACK_PRODUCT);
+  const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string }>({ name: "", hex: "" });
   const [quantity, setQuantity] = useState(1);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [activeTab, setActiveTab] = useState<"description" | "reviews" | "shipping">("description");
 
   const addToCart = useCartStore((state) => state.addItem);
   const { addItem: addToWishlist, isInWishlist, removeItem: removeFromWishlist } = useWishlistStore();
-
   const inWishlist = isInWishlist(product.id);
+
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const res = await fetch(`/api/products/${slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          const p = {
+            id: data.id,
+            name: data.name,
+            slug: data.slug,
+            sku: data.sku,
+            price: Number(data.price),
+            compareAt: data.compareAt ? Number(data.compareAt) : null,
+            description: data.description,
+            material: data.material || "",
+            weight: data.weight ? `${data.weight}g` : "N/A",
+            category: data.category?.name || "Batik",
+            stock: data.stock,
+            rating: Number(data.rating) || 0,
+            reviewCount: data.reviewCount || 0,
+            sizes: data.sizes?.map((s: { name: string }) => s.name) || ["M", "L", "XL"],
+            colors: data.colors?.length > 0 ? data.colors : [{ name: "Default", hex: "#1B5E20" }],
+            images: data.images?.map((img: { url: string }) => img.url) || [],
+            features: [
+              data.material ? `Material: ${data.material}` : null,
+              "Certificate of authenticity included",
+              "Handcrafted by Indonesian artisans",
+              "Free worldwide shipping over $150",
+            ].filter(Boolean) as string[],
+          };
+          setProduct(p);
+          if (p.colors.length > 0) setSelectedColor(p.colors[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduct();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <section className="section-padding bg-background">
+        <div className="container-luxury mx-auto flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+        </div>
+      </section>
+    );
+  }
 
   const handleAddToCart = () => {
     if (!selectedSize) {
