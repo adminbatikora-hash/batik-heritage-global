@@ -1,74 +1,306 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   Plus,
   Search,
-  Filter,
-  MoreVertical,
   Edit,
   Trash2,
-  Eye,
-  Upload,
+  X,
+  Save,
+  Loader2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
-const products = [
-  { id: "1", name: "Royal Parang Silk Shirt", sku: "BTK-MEN-001", price: 189, stock: 15, status: "Active", category: "Men Batik" },
-  { id: "2", name: "Mega Mendung Dress", sku: "BTK-WMN-001", price: 259, stock: 8, status: "Active", category: "Women Batik" },
-  { id: "3", name: "Kawung Premium Blazer", sku: "BTK-MEN-002", price: 349, stock: 5, status: "Active", category: "Men Batik" },
-  { id: "4", name: "Truntum Elegant Gown", sku: "BTK-WMN-002", price: 499, stock: 3, status: "Low Stock", category: "Women Batik" },
-  { id: "5", name: "Sogan Classic Kemeja", sku: "BTK-MEN-003", price: 149, stock: 22, status: "Active", category: "Men Batik" },
-  { id: "6", name: "Ceplok Modern Blouse", sku: "BTK-WMN-003", price: 179, stock: 0, status: "Out of Stock", category: "Women Batik" },
-];
+interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  sku: string;
+  price: number;
+  compareAt: number | null;
+  stock: number;
+  published: boolean;
+  featured: boolean;
+  material: string | null;
+  description: string;
+  shortDesc: string | null;
+  category: { name: string; slug: string } | null;
+  images: { url: string; alt: string | null }[];
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export default function AdminProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase())
+  // Form state
+  const [form, setForm] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    shortDesc: "",
+    sku: "",
+    price: "",
+    compareAt: "",
+    cost: "",
+    weight: "",
+    material: "",
+    categoryId: "",
+    stock: "",
+    featured: false,
+    imageUrls: "",
+  });
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  async function fetchProducts() {
+    try {
+      const res = await fetch("/api/products?limit=100");
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data.products);
+      }
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchCategories() {
+    try {
+      const res = await fetch("/api/admin/categories");
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data);
+      }
+    } catch {}
+  }
+
+  function generateSlug(name: string) {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  function resetForm() {
+    setForm({ name: "", slug: "", description: "", shortDesc: "", sku: "", price: "", compareAt: "", cost: "", weight: "", material: "", categoryId: "", stock: "", featured: false, imageUrls: "" });
+    setEditingId(null);
+    setShowForm(false);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+
+    const images = form.imageUrls
+      .split("\n")
+      .filter(Boolean)
+      .map((url, i) => ({ url: url.trim(), alt: `${form.name} - Image ${i + 1}` }));
+
+    const payload = {
+      name: form.name,
+      slug: form.slug || generateSlug(form.name),
+      description: form.description,
+      shortDesc: form.shortDesc || null,
+      sku: form.sku,
+      price: parseFloat(form.price),
+      compareAt: form.compareAt ? parseFloat(form.compareAt) : null,
+      cost: form.cost ? parseFloat(form.cost) : null,
+      weight: form.weight ? parseFloat(form.weight) : null,
+      material: form.material || null,
+      categoryId: form.categoryId,
+      stock: parseInt(form.stock) || 0,
+      featured: form.featured,
+      images: images.length > 0 ? images : undefined,
+    };
+
+    try {
+      const url = editingId ? `/api/admin/products/${editingId}` : "/api/products";
+      const method = editingId ? "PUT" : "POST";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+
+      if (res.ok) {
+        toast.success(editingId ? "Product updated!" : "Product created!");
+        resetForm();
+        fetchProducts();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to save product");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Product deleted");
+        fetchProducts();
+      } else {
+        toast.error("Failed to delete");
+      }
+    } catch {
+      toast.error("Network error");
+    }
+  }
+
+  function handleEdit(product: Product) {
+    setForm({
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
+      shortDesc: product.shortDesc || "",
+      sku: product.sku,
+      price: String(product.price),
+      compareAt: product.compareAt ? String(product.compareAt) : "",
+      cost: "",
+      weight: "",
+      material: product.material || "",
+      categoryId: "",
+      stock: String(product.stock),
+      featured: product.featured,
+      imageUrls: product.images.map((img) => img.url).join("\n"),
+    });
+    setEditingId(product.id);
+    setShowForm(true);
+  }
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.sku.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Products</h1>
-          <p className="text-foreground/50 text-sm mt-1">
-            Manage your product catalog
-          </p>
+          <h1 className="text-2xl font-bold">Products ({products.length})</h1>
+          <p className="text-foreground/50 text-sm mt-1">Manage your product catalog</p>
         </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm hover:bg-gray-50 transition-colors">
-            <Upload className="w-4 h-4" />
-            Import
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm hover:bg-primary/90 transition-colors">
-            <Plus className="w-4 h-4" />
-            Add Product
-          </button>
-        </div>
+        <button
+          onClick={() => { resetForm(); setShowForm(true); }}
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Product
+        </button>
       </div>
 
-      {/* Filters */}
+      {/* Product Form Modal */}
+      {showForm && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-start justify-center pt-10 bg-black/50 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-3xl mx-4 my-8 relative">
+            <button onClick={resetForm} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold mb-6">{editingId ? "Edit Product" : "Add New Product"}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Product Name *</label>
+                  <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: generateSlug(e.target.value) })} required className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Batik Tulis Premium..." />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Slug</label>
+                  <input type="text" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="auto-generated" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">SKU *</label>
+                  <input type="text" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} required className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="BTK-001" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Price ($) *</label>
+                  <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="275" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Compare At Price ($)</label>
+                  <input type="number" step="0.01" value={form.compareAt} onChange={(e) => setForm({ ...form, compareAt: e.target.value })} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="350" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Stock *</label>
+                  <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} required className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="10" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Category *</label>
+                  <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} required className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50">
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Material</label>
+                  <input type="text" value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Premium Cotton" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Short Description (SEO)</label>
+                  <input type="text" value={form.shortDesc} onChange={(e) => setForm({ ...form, shortDesc: e.target.value })} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Brief SEO-friendly description..." maxLength={160} />
+                  <p className="text-xs text-foreground/40 mt-1">{form.shortDesc.length}/160 characters</p>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Full Description *</label>
+                  <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required rows={4} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Detailed product description for SEO..." />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Image URLs (one per line)</label>
+                  <textarea value={form.imageUrls} onChange={(e) => setForm({ ...form, imageUrls: e.target.value })} rows={3} className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder={"/products/batik1.png\n/products/batik1B.png\n/products/batik1C.png"} />
+                  <p className="text-xs text-foreground/40 mt-1">Use paths like /products/filename.png or external URLs</p>
+                </div>
+                <div className="col-span-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} className="rounded" />
+                    Featured Product (shown on homepage)
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button type="submit" disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm hover:bg-primary/90 disabled:opacity-50">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {editingId ? "Update Product" : "Create Product"}
+                </button>
+                <button type="button" onClick={resetForm} className="px-6 py-2.5 border rounded-xl text-sm hover:bg-gray-50">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Search */}
       <div className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm border">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
-          />
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search products..." className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm hover:bg-gray-50 transition-colors">
-          <Filter className="w-4 h-4" />
-          Filters
-        </button>
       </div>
 
       {/* Products Table */}
@@ -78,7 +310,6 @@ export default function AdminProducts() {
             <tr>
               <th className="text-left px-6 py-4 font-medium text-foreground/50">Product</th>
               <th className="text-left px-6 py-4 font-medium text-foreground/50">SKU</th>
-              <th className="text-left px-6 py-4 font-medium text-foreground/50">Category</th>
               <th className="text-left px-6 py-4 font-medium text-foreground/50">Price</th>
               <th className="text-left px-6 py-4 font-medium text-foreground/50">Stock</th>
               <th className="text-left px-6 py-4 font-medium text-foreground/50">Status</th>
@@ -87,52 +318,49 @@ export default function AdminProducts() {
           </thead>
           <tbody className="divide-y">
             {filteredProducts.map((product) => (
-              <motion.tr
-                key={product.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="hover:bg-gray-50"
-              >
+              <tr key={product.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0" />
-                    <span className="font-medium">{product.name}</span>
+                    <div className="w-10 h-10 rounded-lg overflow-hidden relative bg-gray-100 flex-shrink-0">
+                      {product.images[0] ? (
+                        <Image src={product.images[0].url} alt={product.name} fill className="object-cover" sizes="40px" />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="font-medium">{product.name}</span>
+                      <p className="text-xs text-foreground/40">{product.category?.name}</p>
+                    </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 font-mono text-xs text-foreground/50">
-                  {product.sku}
-                </td>
-                <td className="px-6 py-4 text-foreground/60">{product.category}</td>
-                <td className="px-6 py-4 font-semibold">${product.price}</td>
+                <td className="px-6 py-4 font-mono text-xs text-foreground/50">{product.sku}</td>
+                <td className="px-6 py-4 font-semibold">${Number(product.price).toFixed(0)}</td>
                 <td className="px-6 py-4">{product.stock}</td>
                 <td className="px-6 py-4">
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                      product.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : product.status === "Low Stock"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {product.status}
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${product.stock > 5 ? "bg-green-100 text-green-700" : product.stock > 0 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
+                    {product.stock > 5 ? "Active" : product.stock > 0 ? "Low Stock" : "Out of Stock"}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" aria-label="View">
-                      <Eye className="w-4 h-4 text-foreground/40" />
-                    </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Edit">
+                    <button onClick={() => handleEdit(product)} className="p-1.5 hover:bg-gray-100 rounded-lg" aria-label="Edit">
                       <Edit className="w-4 h-4 text-foreground/40" />
                     </button>
-                    <button className="p-1.5 hover:bg-red-50 rounded-lg transition-colors" aria-label="Delete">
+                    <button onClick={() => handleDelete(product.id)} className="p-1.5 hover:bg-red-50 rounded-lg" aria-label="Delete">
                       <Trash2 className="w-4 h-4 text-red-400" />
                     </button>
                   </div>
                 </td>
-              </motion.tr>
+              </tr>
             ))}
+            {filteredProducts.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-foreground/40">
+                  No products found. Click &quot;Add Product&quot; to create one.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
