@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { HERO_STATS } from "@/lib/constants";
@@ -166,7 +167,7 @@ export default function HeroSection() {
               </motion.div>
             </div>
 
-            {/* Right - 3D Glass Card Display */}
+            {/* Right - Hero Banner Image */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -174,7 +175,6 @@ export default function HeroSection() {
               className="relative hidden lg:block"
             >
               <div className="relative w-full aspect-square max-w-lg mx-auto">
-                {/* Main Glass Card */}
                 <motion.div
                   animate={{ y: [-10, 10, -10] }}
                   transition={{
@@ -182,75 +182,17 @@ export default function HeroSection() {
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  className="absolute inset-8 glass-card-solid rounded-3xl p-8 shadow-luxury overflow-hidden"
+                  className="relative w-full h-full rounded-3xl overflow-hidden shadow-luxury"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-secondary/5" />
-                  <div className="relative z-10 h-full flex flex-col items-center justify-center text-center">
-                    <div className="w-24 h-24 gradient-gold rounded-2xl flex items-center justify-center mb-6">
-                      <span className="text-4xl font-display text-white font-bold">
-                        B
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-display font-bold text-primary">
-                      Premium Collection
-                    </h3>
-                    <p className="text-sm text-foreground/50 mt-2">
-                      Handcrafted Masterpieces
-                    </p>
-                    <div className="mt-6 flex gap-2">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div
-                          key={i}
-                          className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/20 to-secondary/20 border border-accent/30"
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  <Image
+                    src="/herobanner.png"
+                    alt="Batikora - Authentic Indonesian Batik"
+                    fill
+                    className="object-cover"
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
                 </motion.div>
-
-                {/* Floating Accent Cards */}
-                <motion.div
-                  animate={{ y: [10, -10, 10], x: [5, -5, 5] }}
-                  transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="absolute -top-4 -right-4 w-32 h-32 glass-card rounded-2xl p-4 shadow-glass flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-secondary">50+</p>
-                    <p className="text-[10px] text-foreground/50">Countries</p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  animate={{ y: [-10, 10, -10], x: [-5, 5, -5] }}
-                  transition={{
-                    duration: 7,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="absolute -bottom-4 -left-4 w-36 h-24 glass-card rounded-2xl p-4 shadow-glass flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-secondary">⭐ 4.9</p>
-                    <p className="text-[10px] text-foreground/50">
-                      Customer Rating
-                    </p>
-                  </div>
-                </motion.div>
-
-                {/* Gold Ring */}
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 20,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="absolute inset-0 rounded-full border-2 border-dashed border-accent/20"
-                />
               </div>
             </motion.div>
           </div>
