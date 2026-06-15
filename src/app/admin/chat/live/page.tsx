@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Send,
@@ -16,25 +16,145 @@ import {
   Info,
   ArrowLeft,
   Circle,
+  RefreshCw,
+  MessageSquare,
 } from "lucide-react";
-import { useChatStore } from "@/store/useChatStore";
-import { ChatMessage } from "@/lib/chat/types";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
-export default function AdminLiveChatPage() {
-  const { messages, conversation, adminReply, liveAgentConnected, isTyping } = useChatStore();
-  const [replyInput, setReplyInput] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+interface ServerMessage {
+  id: string;
+  conversationId: string;
+  content: string;
+  sender: string;
+  senderName: string;
+  createdAt: string;
+}
 
+interface ServerConversation {
+  id: string;
+  customerName: string;
+  customerEmail: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ServerMessage[];
+  _count: { messages: number };
+}
+
+export default function AdminLiveChatPage() {
+  const [conversations, setConversations] = useState<ServerConversation[]>([]);
+  const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ServerMessage[]>([]);
+  const [replyInput, setReplyInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const convPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Fetch active conversations
+  const fetchConversations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/chat/conversations");
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data.conversations || []);
+      }
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch messages for selected conversation
+  const fetchMessages = useCallback(async () => {
+    if (!selectedConvId) return;
+    try {
+      const res = await fetch(
+        `/api/chat/conversations/${selectedConvId}/messages`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  }, [selectedConvId]);
+
+  // Initial load + polling for conversations list
+  useEffect(() => {
+    fetchConversations();
+    convPollingRef.current = setInterval(fetchConversations, 5000);
+    return () => {
+      if (convPollingRef.current) clearInterval(convPollingRef.current);
+    };
+  }, [fetchConversations]);
+
+  // Poll messages when a conversation is selected
+  useEffect(() => {
+    if (selectedConvId) {
+      fetchMessages();
+      pollingRef.current = setInterval(fetchMessages, 2000);
+    }
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [selectedConvId, fetchMessages]);
+
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!replyInput.trim()) return;
-    adminReply(replyInput.trim());
-    setReplyInput("");
+  const selectedConversation = conversations.find(
+    (c) => c.id === selectedConvId
+  );
+
+  const handleSend = async () => {
+    if (!replyInput.trim() || !selectedConvId) return;
+    setSending(true);
+
+    try {
+      const res = await fetch(
+        `/api/chat/conversations/${selectedConvId}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: replyInput.trim(),
+            sender: "agent",
+            senderName: "Support Agent",
+          }),
+        }
+      );
+
+      if (res.ok) {
+        setReplyInput("");
+        // Immediately refresh messages
+        await fetchMessages();
+      }
+    } catch (error) {
+      console.error("Error sending reply:", error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleCloseConversation = async () => {
+    if (!selectedConvId) return;
+    try {
+      await fetch(`/api/chat/conversations/${selectedConvId}/close`, {
+        method: "POST",
+      });
+      setSelectedConvId(null);
+      setMessages([]);
+      await fetchConversations();
+    } catch (error) {
+      console.error("Error closing conversation:", error);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -44,36 +164,109 @@ export default function AdminLiveChatPage() {
     }
   };
 
-  const customerMessages = messages.filter((m) => m.sender === "customer");
-  const hasActiveChat = conversation && liveAgentConnected;
-
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col -m-8">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white border-b">
         <div className="flex items-center gap-3">
-          <Link href="/admin/chat" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <Link
+            href="/admin/chat"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <Headphones className="w-5 h-5 text-green-600" />
           <div>
             <h1 className="text-lg font-bold">Live Chat Agent Panel</h1>
-            <p className="text-xs text-foreground/50">Respond to customers in real-time</p>
+            <p className="text-xs text-foreground/50">
+              Respond to customers in real-time
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-            hasActiveChat ? "bg-green-100 text-green-700" : "bg-gray-100 text-foreground/50"
-          }`}>
-            <Circle className={`w-2 h-2 fill-current ${hasActiveChat ? "text-green-500" : "text-gray-400"}`} />
-            {hasActiveChat ? "Active Chat" : "No Active Chat"}
+          <button
+            onClick={fetchConversations}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Refresh"
+          >
+            <RefreshCw className="w-4 h-4 text-foreground/50" />
+          </button>
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+            <Circle className="w-2 h-2 fill-current text-green-500" />
+            {conversations.length} Active Chat{conversations.length !== 1 ? "s" : ""}
           </span>
         </div>
       </div>
 
-      {hasActiveChat ? (
-        <div className="flex flex-1 overflow-hidden">
-          {/* Chat Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Conversations Sidebar */}
+        <div className="w-80 border-r bg-gray-50 overflow-y-auto">
+          {loading ? (
+            <div className="p-6 text-center text-sm text-foreground/50">
+              Loading conversations...
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="w-8 h-8 text-gray-300" />
+              </div>
+              <p className="text-sm text-foreground/50 font-medium">
+                No active chats
+              </p>
+              <p className="text-xs text-foreground/30 mt-1">
+                Waiting for customers to connect...
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => setSelectedConvId(conv.id)}
+                  className={`w-full p-4 text-left hover:bg-white transition-colors ${
+                    selectedConvId === conv.id
+                      ? "bg-white border-l-4 border-l-green-500"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center flex-shrink-0">
+                      <User className="w-5 h-5 text-green-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm truncate">
+                          {conv.customerName}
+                        </h4>
+                        <span className="text-[10px] text-foreground/40 flex-shrink-0">
+                          {formatDistanceToNow(new Date(conv.updatedAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-foreground/50 truncate mt-0.5">
+                        {conv.messages[0]?.content || "New conversation"}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-foreground/40">
+                          {conv._count.messages} messages
+                        </span>
+                        {conv.customerEmail && (
+                          <span className="text-[10px] text-foreground/40 truncate">
+                            • {conv.customerEmail}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Chat Area */}
+        {selectedConversation ? (
           <div className="flex-1 flex flex-col">
             {/* Chat Header */}
             <div className="px-6 py-3 bg-gray-50 border-b flex items-center justify-between">
@@ -82,20 +275,20 @@ export default function AdminLiveChatPage() {
                   <User className="w-5 h-5 text-green-700" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">{conversation.customerName}</h3>
+                  <h3 className="font-semibold text-sm">
+                    {selectedConversation.customerName}
+                  </h3>
                   <p className="text-[11px] text-foreground/50">
-                    {conversation.customerEmail || "No email provided"} • Online
+                    {selectedConversation.customerEmail || "No email provided"} •
+                    Online
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors" aria-label="Phone call">
-                  <Phone className="w-4 h-4 text-foreground/40" />
-                </button>
-                <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors" aria-label="Video call">
-                  <Video className="w-4 h-4 text-foreground/40" />
-                </button>
-                <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors" aria-label="Info">
+                <button
+                  className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                  aria-label="Info"
+                >
                   <Info className="w-4 h-4 text-foreground/40" />
                 </button>
               </div>
@@ -133,12 +326,6 @@ export default function AdminLiveChatPage() {
             {/* Reply Input */}
             <div className="px-6 py-4 bg-white border-t">
               <div className="flex items-end gap-3">
-                <button className="p-2 text-foreground/40 hover:text-green-600 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Paperclip className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-foreground/40 hover:text-green-600 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Smile className="w-5 h-5" />
-                </button>
                 <div className="flex-1">
                   <textarea
                     value={replyInput}
@@ -152,9 +339,9 @@ export default function AdminLiveChatPage() {
                 </div>
                 <button
                   onClick={handleSend}
-                  disabled={!replyInput.trim()}
+                  disabled={!replyInput.trim() || sending}
                   className={`p-3 rounded-xl transition-all ${
-                    replyInput.trim()
+                    replyInput.trim() && !sending
                       ? "bg-green-600 text-white hover:bg-green-700 shadow-lg"
                       : "bg-gray-100 text-foreground/30"
                   }`}
@@ -164,95 +351,49 @@ export default function AdminLiveChatPage() {
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Customer Info Panel */}
-          <div className="w-72 border-l bg-gray-50 overflow-y-auto">
-            <div className="p-5 text-center border-b bg-white">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center mx-auto">
-                <User className="w-8 h-8 text-green-700" />
-              </div>
-              <h4 className="font-semibold mt-3">{conversation.customerName}</h4>
-              <p className="text-xs text-foreground/50 mt-1">{conversation.customerEmail || "Guest"}</p>
-              <div className="flex items-center justify-center gap-1 mt-2">
-                <Circle className="w-2 h-2 fill-green-500 text-green-500" />
-                <span className="text-xs text-green-600">Online now</span>
-              </div>
-            </div>
-
-            <div className="p-4 space-y-4">
-              <div>
-                <h5 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2">Chat Info</h5>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-foreground/50">Started</span>
-                    <span className="font-medium text-xs">
-                      {formatDistanceToNow(new Date(conversation.createdAt), { addSuffix: true })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-foreground/50">Messages</span>
-                    <span className="font-medium">{messages.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-foreground/50">Status</span>
-                    <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">Active</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Internal Notes */}
-              <div>
-                <h5 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2">Internal Notes</h5>
-                <textarea
-                  placeholder="Add a note about this customer..."
-                  className="w-full px-3 py-2 bg-white border rounded-lg text-xs resize-none focus:outline-none focus:ring-2 focus:ring-green-500/30"
-                  rows={3}
-                />
-              </div>
-
-              {/* Actions */}
-              <div>
-                <h5 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2">Actions</h5>
-                <div className="space-y-2">
-                  <button className="w-full px-3 py-2 bg-white border rounded-lg text-xs text-left hover:bg-gray-50 transition-colors">
-                    📋 Transfer to another agent
-                  </button>
-                  <button className="w-full px-3 py-2 bg-white border rounded-lg text-xs text-left hover:bg-gray-50 transition-colors">
-                    🏷️ Add tag
-                  </button>
-                  <button className="w-full px-3 py-2 bg-white border rounded-lg text-xs text-left hover:bg-red-50 hover:border-red-200 text-red-600 transition-colors">
-                    ✕ Close conversation
-                  </button>
-                </div>
-              </div>
+            {/* Close Conversation Button */}
+            <div className="px-6 py-2 bg-gray-50 border-t flex justify-end">
+              <button
+                onClick={handleCloseConversation}
+                className="px-4 py-2 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                ✕ Close Conversation
+              </button>
             </div>
           </div>
-        </div>
-      ) : (
-        /* No Active Chat */
-        <div className="flex-1 flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Headphones className="w-10 h-10 text-gray-300" />
+        ) : (
+          /* No Conversation Selected */
+          <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <Headphones className="w-10 h-10 text-gray-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground/50">
+                {conversations.length > 0
+                  ? "Select a Conversation"
+                  : "No Active Live Chat"}
+              </h3>
+              <p className="text-sm text-foreground/30 mt-2 max-w-sm">
+                {conversations.length > 0
+                  ? "Choose a conversation from the left panel to start responding."
+                  : "When a customer starts a live chat from the widget, it will appear here."}
+              </p>
+              <p className="text-xs text-foreground/20 mt-4">
+                Tip: Open the website in another tab and click the chat widget →
+                Live Agent to test.
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-foreground/50">No Active Live Chat</h3>
-            <p className="text-sm text-foreground/30 mt-2 max-w-sm">
-              When a customer starts a live chat from the widget, it will appear here. You can then respond in real-time.
-            </p>
-            <p className="text-xs text-foreground/20 mt-4">
-              Tip: Open the website in another tab and click the chat widget → Live Agent to test.
-            </p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
 
-function AdminMessageBubble({ message }: { message: ChatMessage }) {
+function AdminMessageBubble({ message }: { message: ServerMessage }) {
   const isCustomer = message.sender === "customer";
-  const isSystem = message.type === "system";
+  const isSystem = message.sender === "system";
 
   if (isSystem) {
     return (
@@ -266,13 +407,19 @@ function AdminMessageBubble({ message }: { message: ChatMessage }) {
 
   return (
     <div className={`flex ${isCustomer ? "justify-start" : "justify-end"}`}>
-      <div className={`max-w-[65%]`}>
-        <div className={`flex items-center gap-1.5 mb-1 ${isCustomer ? "" : "justify-end"}`}>
+      <div className="max-w-[65%]">
+        <div
+          className={`flex items-center gap-1.5 mb-1 ${
+            isCustomer ? "" : "justify-end"
+          }`}
+        >
           <span className="text-[10px] font-medium text-foreground/40">
-            {isCustomer ? message.senderName : "You"}
+            {isCustomer ? message.senderName : "You (Agent)"}
           </span>
           <span className="text-[10px] text-foreground/20">
-            {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
+            {formatDistanceToNow(new Date(message.createdAt), {
+              addSuffix: true,
+            })}
           </span>
         </div>
         <div

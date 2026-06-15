@@ -1,6 +1,6 @@
 export type MessageStatus = "sending" | "sent" | "delivered" | "read";
 export type MessageType = "text" | "image" | "file" | "voice" | "video" | "system";
-export type SenderType = "customer" | "agent" | "ai";
+export type SenderType = "customer" | "agent" | "ai" | "system";
 export type ChatStatus = "active" | "waiting" | "closed" | "archived";
 export type Priority = "low" | "medium" | "high" | "urgent";
 export type IntentType =

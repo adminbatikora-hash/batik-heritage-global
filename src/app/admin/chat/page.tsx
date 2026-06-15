@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   MessageCircle,
   Users,
@@ -21,6 +22,7 @@ import {
   CheckCircle2,
   ArrowUpRight,
   Zap,
+  Headphones,
 } from "lucide-react";
 
 // Mock data
@@ -130,6 +132,25 @@ export default function AdminChatPage() {
   const [selectedChat, setSelectedChat] = useState(conversations[0]);
   const [replyInput, setReplyInput] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [liveChatsCount, setLiveChatsCount] = useState(0);
+
+  // Fetch live chat count
+  useEffect(() => {
+    const fetchLiveCount = async () => {
+      try {
+        const res = await fetch("/api/chat/conversations");
+        if (res.ok) {
+          const data = await res.json();
+          setLiveChatsCount(data.conversations?.length || 0);
+        }
+      } catch {
+        // silent
+      }
+    };
+    fetchLiveCount();
+    const interval = setInterval(fetchLiveCount, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredConversations = conversations.filter(
     (c) => filterStatus === "all" || c.status === filterStatus
@@ -137,6 +158,34 @@ export default function AdminChatPage() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col -m-8">
+      {/* Live Chat Banner */}
+      <div className="px-4 pt-4 pb-2 bg-white border-b">
+        <Link
+          href="/admin/chat/live"
+          className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Headphones className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-green-800">Live Chat Panel</h3>
+              <p className="text-xs text-green-600/70">
+                Respond to real customers in real-time
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {liveChatsCount > 0 && (
+              <span className="px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-full animate-pulse">
+                {liveChatsCount} Active
+              </span>
+            )}
+            <ArrowUpRight className="w-5 h-5 text-green-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </div>
+        </Link>
+      </div>
+
       {/* Stats Bar */}
       <div className="grid grid-cols-4 gap-4 p-4 bg-white border-b">
         {stats.map((stat) => (

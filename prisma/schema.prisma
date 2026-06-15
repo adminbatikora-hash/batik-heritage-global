@@ -442,3 +442,33 @@ model Newsletter {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
 }
+
+// ==================== LIVE CHAT ====================
+
+model ChatConversation {
+  id            String   @id @default(cuid())
+  customerName  String
+  customerEmail String?
+  status        String   @default("active") // active, closed
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  messages ChatMessage[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  content        String   @db.Text
+  sender         String   // customer, agent, system
+  senderName     String
+  createdAt      DateTime @default(now())
+
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
