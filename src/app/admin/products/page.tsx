@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import {
   Plus,
   Search,
@@ -28,7 +27,7 @@ interface Product {
   description: string;
   shortDesc: string | null;
   categoryId: string;
-  category: { name: string; slug: string } | null;
+  category: { id: string; name: string; slug: string } | null;
   images: { url: string; alt: string | null }[];
 }
 
@@ -207,12 +206,13 @@ export default function AdminProducts() {
       cost: "",
       weight: "",
       material: product.material || "",
-      categoryId: (product.category as unknown as { id?: string })?.id || product.categoryId || "",
+      categoryId: product.categoryId || "",
       stock: String(product.stock),
       featured: product.featured,
-      imageUrls: product.images.map((img) => img.url).join("\n"),
+      imageUrls: "",
     });
-    setMediaFiles([]);
+    // Load existing images as media files for preview
+    setMediaFiles(product.images.map((img) => ({ url: img.url, type: "image", name: img.alt || "product-image" })));
     setEditingId(product.id);
     setShowForm(true);
   }
@@ -339,7 +339,7 @@ export default function AdminProducts() {
                             <video src={media.url} className="w-full h-20 object-cover" muted />
                           ) : (
                             <div className="relative w-full h-20">
-                              <Image src={media.url} alt={media.name} fill className="object-cover" sizes="100px" />
+                              <img src={media.url} alt={media.name} className="w-full h-full object-cover" />
                             </div>
                           )}
                           <button
@@ -409,16 +409,14 @@ export default function AdminProducts() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg overflow-hidden relative bg-gray-100 flex-shrink-0">
                       {product.images[0]?.url ? (
-                        <Image
+                        <img
                           src={product.images[0].url}
                           alt={product.name}
-                          fill
-                          className="object-cover"
-                          sizes="40px"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
                         />
                       ) : null}
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                      <div className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${product.images[0]?.url ? 'hidden' : ''}`}>
                         <span className="text-[10px] text-gray-400">IMG</span>
                       </div>
                     </div>

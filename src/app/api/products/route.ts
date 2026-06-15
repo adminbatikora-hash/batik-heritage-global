@@ -58,6 +58,8 @@ export async function GET(request: NextRequest) {
         include: {
           images: { orderBy: { position: "asc" } },
           category: { select: { id: true, name: true, slug: true } },
+          sizes: admin ? true : undefined,
+          colors: admin ? true : undefined,
         },
         orderBy,
         skip: (page - 1) * limit,

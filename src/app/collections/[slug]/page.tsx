@@ -46,7 +46,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export async function generateStaticParams() {
-  return Object.keys(COLLECTIONS).map((slug) => ({ slug }));
+  return [
+    { slug: "men-batik" },
+    { slug: "women-batik" },
+    { slug: "new-arrivals" },
+    { slug: "best-sellers" },
+  ];
 }
 
 export default async function CollectionPage({ params }: PageProps) {

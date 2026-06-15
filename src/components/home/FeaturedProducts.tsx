@@ -3,7 +3,6 @@
 import { useState, useRef, TouchEvent, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heart, ShoppingBag, Eye, Star, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { useLanguageStore } from "@/store/useLanguageStore";
@@ -125,12 +124,10 @@ function ProductCardSlider({ images, name }: { images: string[]; name: string })
               playsInline
             />
           ) : (
-            <Image
+            <img
               src={images[currentIndex]}
               alt={`${name} - Image ${currentIndex + 1}`}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           )}
         </motion.div>

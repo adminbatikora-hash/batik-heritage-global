@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 import {
   Star,
   Heart,
@@ -117,13 +116,10 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
                   playsInline
                 />
               ) : (
-                <Image
+                <img
                   src={images[currentIndex]}
                   alt={`${name} - Image ${currentIndex + 1}`}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               )}
             </motion.div>
@@ -178,12 +174,10 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
                 {/\.(mp4|webm|mov)$/i.test(img) ? (
                   <video src={img} className="w-full h-full object-cover" muted playsInline />
                 ) : (
-                  <Image
+                  <img
                     src={img}
                     alt={`${name} thumbnail ${idx + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 )}
                 {/\.(mp4|webm|mov)$/i.test(img) && (
@@ -253,13 +247,10 @@ function ProductGallery({ images, name }: { images: string[]; name: string }) {
                   playsInline
                 />
               ) : (
-                <Image
+                <img
                   src={images[currentIndex]}
                   alt={`${name} - Zoomed view ${currentIndex + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="90vw"
-                  quality={100}
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
               )}
             </motion.div>
@@ -325,7 +316,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
             reviewCount: data.reviewCount || 0,
             sizes: data.sizes?.map((s: { name: string }) => s.name) || ["M", "L", "XL"],
             colors: data.colors?.length > 0 ? data.colors : [{ name: "Default", hex: "#1B5E20" }],
-            images: data.images?.map((img: { url: string }) => img.url) || [],
+            images: data.images?.map((img: { url: string }) => img.url) || ["/products/placeholder.png"],
             features: [
               data.material ? `Material: ${data.material}` : null,
               "Certificate of authenticity included",
