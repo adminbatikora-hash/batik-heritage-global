@@ -11,56 +11,18 @@ import { useWishlistStore } from "@/store/useWishlistStore";
 import { t } from "@/lib/translations";
 import toast from "react-hot-toast";
 
-const FEATURED_PRODUCTS = [
-  {
-    id: "0",
-    name: "Batik Tulis Mega Mendung Premium Cirebon",
-    slug: "batik-tulis-mega-mendung-premium-cirebon",
-    price: 275,
-    compareAt: 350,
-    images: ["/products/batik1.png", "/products/batik1B.png", "/products/batik1C.png"],
-    category: "Men Batik",
-    rating: 4.9,
-    reviews: 47,
-    badge: "New Arrival",
-  },
-  {
-    id: "1",
-    name: "Royal Parang Silk Shirt",
-    slug: "royal-parang-silk-shirt",
-    price: 189,
-    compareAt: 249,
-    images: ["/products/batik-shirt-1.jpg"],
-    category: "Men Batik",
-    rating: 4.9,
-    reviews: 128,
-    badge: "Best Seller",
-  },
-  {
-    id: "2",
-    name: "Mega Mendung Dress",
-    slug: "mega-mendung-dress",
-    price: 259,
-    compareAt: null,
-    images: ["/products/batik-dress-1.jpg"],
-    category: "Women Batik",
-    rating: 4.8,
-    reviews: 96,
-    badge: "New",
-  },
-  {
-    id: "3",
-    name: "Kawung Premium Blazer",
-    slug: "kawung-premium-blazer",
-    price: 349,
-    compareAt: 429,
-    images: ["/products/batik-blazer-1.jpg"],
-    category: "Men Batik",
-    rating: 4.9,
-    reviews: 74,
-    badge: "Limited",
-  },
-];
+const FEATURED_PRODUCTS: Array<{
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  compareAt: number | null;
+  images: string[];
+  category: string;
+  rating: number;
+  reviews: number;
+  badge: string | null;
+}> = [];
 
 function ProductCardSlider({ images, name }: { images: string[]; name: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -194,11 +156,12 @@ export default function FeaturedProducts() {
   const addToCart = useCartStore((state) => state.addItem);
   const { addItem: addToWishlist, isInWishlist, removeItem: removeFromWishlist } = useWishlistStore();
   const [products, setProducts] = useState(FEATURED_PRODUCTS);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchFeatured() {
       try {
-        const res = await fetch("/api/products?limit=4&sort=best-selling");
+        const res = await fetch("/api/products?limit=8&sort=best-selling");
         if (res.ok) {
           const data = await res.json();
           if (data.products && data.products.length > 0) {
@@ -208,16 +171,20 @@ export default function FeaturedProducts() {
               slug: p.slug,
               price: Number(p.price),
               compareAt: p.compareAt ? Number(p.compareAt) : null,
-              images: p.images?.map((img) => img.url) || ["/products/placeholder.png"],
+              images: p.images?.map((img: { url: string }) => img.url) || [],
               category: p.category?.name || "Batik",
-              rating: Number(p.rating) || 4.5,
+              rating: Number(p.rating) || 0,
               reviews: p.reviewCount || 0,
               badge: p.featured ? "Featured" : null,
             }));
             setProducts(mapped);
           }
         }
-      } catch {}
+      } catch (err) {
+        console.error("Failed to fetch featured products:", err);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchFeatured();
   }, []);
@@ -286,6 +253,15 @@ export default function FeaturedProducts() {
         </motion.div>
 
         {/* Products Grid */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-foreground/50">No products available yet. Check back soon!</p>
+          </div>
+        ) : (
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -293,7 +269,7 @@ export default function FeaturedProducts() {
           viewport={{ once: true }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
         >
-          {FEATURED_PRODUCTS.map((product) => (
+          {products.map((product) => (
             <motion.div
               key={product.id}
               variants={itemVariants}
@@ -376,6 +352,7 @@ export default function FeaturedProducts() {
             </motion.div>
           ))}
         </motion.div>
+        )}
 
         {/* View All Button */}
         <motion.div
