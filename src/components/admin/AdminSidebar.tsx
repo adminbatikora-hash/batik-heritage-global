@@ -41,16 +41,16 @@ export default function AdminSidebar() {
     <aside className="fixed left-0 top-0 h-full w-64 bg-primary text-white flex flex-col z-40">
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
-        <Link href="/admin" className="flex items-center space-x-2">
+        <Link href="/admin" className="flex flex-col items-center space-y-2">
           <Image
-            src="/logo.png"
+            src="/batikora.png"
             alt="Batikora"
-            width={120}
-            height={36}
-            className="h-9 w-auto brightness-0 invert"
+            width={150}
+            height={150}
+            className="h-14 w-auto"
           />
         </Link>
-        <p className="text-[9px] tracking-widest text-accent uppercase mt-1">Admin Panel</p>
+        <p className="text-[9px] tracking-widest text-accent uppercase mt-2 text-center">Admin Panel</p>
       </div>
 
       {/* Navigation */}
