@@ -315,7 +315,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
             rating: Number(data.rating) || 0,
             reviewCount: data.reviewCount || 0,
             sizes: data.sizes?.map((s: { name: string }) => s.name) || ["M", "L", "XL"],
-            colors: data.colors?.length > 0 ? data.colors : [{ name: "Default", hex: "#1B5E20" }],
+            colors: data.colors?.length > 0 ? data.colors : [],
             images: data.images?.map((img: { url: string }) => img.url) || ["/products/placeholder.png"],
             features: [
               data.material ? `Material: ${data.material}` : null,
@@ -463,6 +463,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
             </p>
 
             {/* Color Selection */}
+            {product.colors.length > 0 && (
             <div>
               <p className="text-sm font-medium mb-3">
                 Color: <span className="text-foreground/60">{selectedColor.name}</span>
@@ -483,6 +484,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
                 ))}
               </div>
             </div>
+            )}
 
             {/* Size Selection */}
             <div>
