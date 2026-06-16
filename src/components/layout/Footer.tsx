@@ -93,11 +93,11 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/" className="flex items-center space-x-2">
               <Image
-                src="/logo.png"
+                src="/batikora.png"
                 alt="Batikora"
                 width={140}
-                height={40}
-                className="h-10 w-auto brightness-0 invert"
+                height={140}
+                className="h-12 w-auto"
               />
             </Link>
             <p className="text-white/50 text-sm mt-4 leading-relaxed">
