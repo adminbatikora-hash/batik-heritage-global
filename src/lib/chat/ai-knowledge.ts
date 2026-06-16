@@ -52,9 +52,9 @@ const KNOWLEDGE_BASE = {
     name: "Batikora",
     founded: "2009",
     mission: "Bringing authentic Indonesian Batik to the world while empowering artisan communities",
-    location: "Jl. Malioboro No. 123, Yogyakarta, Indonesia",
-    email: "hello@batikora.com",
-    phone: "+62 274 123 456",
+    location: "Perumahan Kaliwulu Jl. Rosela 4E 14 No. 2, Cirebon, Indonesia",
+    email: "adminbatikora@gmail.com",
+    phone: "+62 87785985396",
     hours: "Mon-Fri 9AM-6PM WIB, Sat 9AM-3PM WIB",
   },
 };

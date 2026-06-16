@@ -17,7 +17,7 @@ async function main() {
       email: "admin@batikora.com",
       password: adminPassword,
       role: "ADMIN",
-      phone: "+62 274 123 456",
+      phone: "+62 87785985396",
     },
   });
   console.log("✅ Admin user created:", admin.email);
@@ -395,9 +395,9 @@ async function main() {
   // ==================== SITE SETTINGS ====================
   const settings = [
     { key: "store_name", value: "Batikora" },
-    { key: "store_email", value: "hello@batikora.com" },
-    { key: "store_phone", value: "+62 274 123 456" },
-    { key: "store_address", value: "Jl. Malioboro No. 123, Yogyakarta, Indonesia 55271" },
+    { key: "store_email", value: "adminbatikora@gmail.com" },
+    { key: "store_phone", value: "+62 87785985396" },
+    { key: "store_address", value: "Perumahan Kaliwulu Jl. Rosela 4E 14 No. 2, Cirebon, Indonesia" },
     { key: "store_currency", value: "USD" },
     { key: "free_shipping_threshold", value: "150" },
     { key: "tax_rate", value: "0" },

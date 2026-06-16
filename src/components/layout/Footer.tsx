@@ -185,15 +185,15 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm text-white/50">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>Jl. Malioboro No. 123, Yogyakarta, Indonesia</span>
+                <span>Perumahan Kaliwulu Jl. Rosela 4E 14 No. 2, Cirebon, Indonesia</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-white/50">
                 <Phone className="w-4 h-4 flex-shrink-0" />
-                <span>+62 274 123 456</span>
+                <span>+62 87785985396</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-white/50">
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                <span>hello@batikora.com</span>
+                <span>adminbatikora@gmail.com</span>
               </li>
             </ul>
           </div>

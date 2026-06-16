@@ -7,17 +7,17 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Visit Us",
-    details: ["Jl. Malioboro No. 123", "Yogyakarta, Indonesia 55271"],
+    details: ["Perumahan Kaliwulu Jl. Rosela 4E 14 No. 2", "Cirebon, Indonesia"],
   },
   {
     icon: Phone,
     title: "Call Us",
-    details: ["+62 274 123 456", "+1 (800) BATIKORA"],
+    details: ["+62 87785985396"],
   },
   {
     icon: Mail,
     title: "Email Us",
-    details: ["hello@batikora.com", "support@batikora.com"],
+    details: ["adminbatikora@gmail.com"],
   },
   {
     icon: Clock,
