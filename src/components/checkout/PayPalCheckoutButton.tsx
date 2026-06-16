@@ -75,6 +75,10 @@ export default function PayPalCheckoutButton({
         }}
         createOrder={async () => {
           try {
+            if (amount <= 0) {
+              throw new Error("Order amount must be greater than $0");
+            }
+
             const res = await fetch("/api/paypal/create-order", {
               method: "POST",
               headers: { "Content-Type": "application/json" },

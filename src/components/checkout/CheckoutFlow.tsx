@@ -373,6 +373,12 @@ export default function CheckoutFlow() {
                     Payment
                   </h2>
 
+                  {items.length === 0 && (
+                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-700">
+                      Your cart is empty. Please add items before proceeding to payment.
+                    </div>
+                  )}
+
                   {paymentError && (
                     <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                       {paymentError}

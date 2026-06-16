@@ -46,45 +46,74 @@ export async function POST(request: NextRequest) {
     const accessToken = await getPayPalAccessToken();
 
     // Build PayPal order payload
-    const orderPayload: Record<string, unknown> = {
-      intent: "CAPTURE",
-      purchase_units: [
-        {
-          amount: {
-            currency_code: currency,
-            value: amount.toFixed(2),
-            breakdown: {
-              item_total: {
-                currency_code: currency,
-                value: amount.toFixed(2),
-              },
+    const purchaseUnit: Record<string, unknown> = {
+      amount: {
+        currency_code: currency,
+        value: amount.toFixed(2),
+      },
+    };
+
+    // Only add item breakdown if items are provided and valid
+    if (items && items.length > 0) {
+      const validItems = items.filter(
+        (item: { name: string; quantity: number; price: number }) =>
+          item.quantity > 0 && item.price > 0
+      );
+
+      if (validItems.length > 0) {
+        const itemTotal = validItems.reduce(
+          (sum: number, item: { price: number; quantity: number }) =>
+            sum + item.price * item.quantity,
+          0
+        );
+
+        purchaseUnit.amount = {
+          currency_code: currency,
+          value: amount.toFixed(2),
+          breakdown: {
+            item_total: {
+              currency_code: currency,
+              value: itemTotal.toFixed(2),
+            },
+            shipping: {
+              currency_code: currency,
+              value: (amount - itemTotal).toFixed(2),
             },
           },
-          items: items?.map((item: { name: string; quantity: number; price: number }) => ({
+        };
+
+        purchaseUnit.items = validItems.map(
+          (item: { name: string; quantity: number; price: number }) => ({
             name: item.name.substring(0, 127),
             quantity: String(item.quantity),
             unit_amount: {
               currency_code: currency,
               value: item.price.toFixed(2),
             },
-          })),
-          ...(shippingAddress && {
-            shipping: {
-              name: {
-                full_name: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
-              },
-              address: {
-                address_line_1: shippingAddress.address1,
-                address_line_2: shippingAddress.address2 || undefined,
-                admin_area_2: shippingAddress.city,
-                admin_area_1: shippingAddress.state,
-                postal_code: shippingAddress.postalCode,
-                country_code: shippingAddress.country,
-              },
-            },
-          }),
+          })
+        );
+      }
+    }
+
+    if (shippingAddress) {
+      purchaseUnit.shipping = {
+        name: {
+          full_name: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
         },
-      ],
+        address: {
+          address_line_1: shippingAddress.address1,
+          address_line_2: shippingAddress.address2 || undefined,
+          admin_area_2: shippingAddress.city,
+          admin_area_1: shippingAddress.state,
+          postal_code: shippingAddress.postalCode,
+          country_code: shippingAddress.country,
+        },
+      };
+    }
+
+    const orderPayload = {
+      intent: "CAPTURE",
+      purchase_units: [purchaseUnit],
     };
 
     const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
