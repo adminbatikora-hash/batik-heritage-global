@@ -9,9 +9,14 @@ import {
   CreditCard,
   CheckCircle,
   Lock,
+  PartyPopper,
+  ShoppingBag,
 } from "lucide-react";
+import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import { SUPPORTED_COUNTRIES, SHIPPING_METHODS } from "@/lib/constants";
+import PayPalProvider from "./PayPalProvider";
+import PayPalCheckoutButton from "./PayPalCheckoutButton";
 
 const steps = [
   { id: 1, name: "Information", icon: User },
@@ -22,6 +27,9 @@ const steps = [
 
 export default function CheckoutFlow() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [orderComplete, setOrderComplete] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [paypalOrderId, setPaypalOrderId] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
@@ -36,18 +44,86 @@ export default function CheckoutFlow() {
     shippingMethod: "standard",
   });
 
-  const { items, getSubtotal, discount } = useCartStore();
+  const { items, getSubtotal, discount, clearCart } = useCartStore();
   const subtotal = getSubtotal();
-  const shippingCost = formData.shippingMethod === "standard" ? 0 : formData.shippingMethod === "express" ? 25 : 45;
+  const shippingCost =
+    formData.shippingMethod === "standard"
+      ? 0
+      : formData.shippingMethod === "express"
+      ? 25
+      : 45;
   const discountAmount = discount > 0 ? subtotal * (discount / 100) : 0;
   const total = subtotal + shippingCost - discountAmount;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const nextStep = () => setCurrentStep(Math.min(4, currentStep + 1));
   const prevStep = () => setCurrentStep(Math.max(1, currentStep - 1));
+
+  const handlePaymentSuccess = (details: {
+    captureId: string;
+    paypalOrderId: string;
+  }) => {
+    setPaypalOrderId(details.paypalOrderId);
+    setOrderComplete(true);
+    clearCart();
+  };
+
+  const handlePaymentError = (error: string) => {
+    setPaymentError(error);
+    setTimeout(() => setPaymentError(""), 5000);
+  };
+
+  // Order Complete Screen
+  if (orderComplete) {
+    return (
+      <section className="section-padding">
+        <div className="container-luxury mx-auto max-w-2xl text-center py-16">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6"
+          >
+            <PartyPopper className="w-12 h-12 text-green-600" />
+          </motion.div>
+          <h1 className="text-3xl font-display font-bold mb-4">
+            Order Confirmed!
+          </h1>
+          <p className="text-foreground/60 mb-2">
+            Thank you for your purchase. Your order has been placed successfully.
+          </p>
+          <p className="text-sm text-foreground/40 mb-8">
+            PayPal Transaction ID: {paypalOrderId}
+          </p>
+          <p className="text-sm text-foreground/60 mb-8">
+            We&apos;ve sent a confirmation email to{" "}
+            <strong>{formData.email}</strong>. You can track your order in your
+            account.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/account"
+              className="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/90 transition-colors"
+            >
+              View My Orders
+            </Link>
+            <Link
+              href="/collections"
+              className="px-6 py-3 border rounded-full font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Continue Shopping
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="section-padding">
@@ -97,7 +173,9 @@ export default function CheckoutFlow() {
                   </h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Email</label>
+                      <label className="block text-sm font-medium mb-1">
+                        Email
+                      </label>
                       <input
                         type="email"
                         name="email"
@@ -109,7 +187,9 @@ export default function CheckoutFlow() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">First Name</label>
+                        <label className="block text-sm font-medium mb-1">
+                          First Name
+                        </label>
                         <input
                           type="text"
                           name="firstName"
@@ -120,7 +200,9 @@ export default function CheckoutFlow() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Last Name</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Last Name
+                        </label>
                         <input
                           type="text"
                           name="lastName"
@@ -132,7 +214,9 @@ export default function CheckoutFlow() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Phone</label>
+                      <label className="block text-sm font-medium mb-1">
+                        Phone
+                      </label>
                       <input
                         type="tel"
                         name="phone"
@@ -154,7 +238,9 @@ export default function CheckoutFlow() {
                   </h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Country</label>
+                      <label className="block text-sm font-medium mb-1">
+                        Country
+                      </label>
                       <select
                         name="country"
                         value={formData.country}
@@ -170,7 +256,9 @@ export default function CheckoutFlow() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Address Line 1</label>
+                      <label className="block text-sm font-medium mb-1">
+                        Address Line 1
+                      </label>
                       <input
                         type="text"
                         name="address1"
@@ -181,7 +269,9 @@ export default function CheckoutFlow() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Address Line 2 (Optional)</label>
+                      <label className="block text-sm font-medium mb-1">
+                        Address Line 2 (Optional)
+                      </label>
                       <input
                         type="text"
                         name="address2"
@@ -193,7 +283,9 @@ export default function CheckoutFlow() {
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">City</label>
+                        <label className="block text-sm font-medium mb-1">
+                          City
+                        </label>
                         <input
                           type="text"
                           name="city"
@@ -203,7 +295,9 @@ export default function CheckoutFlow() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">State</label>
+                        <label className="block text-sm font-medium mb-1">
+                          State
+                        </label>
                         <input
                           type="text"
                           name="state"
@@ -213,7 +307,9 @@ export default function CheckoutFlow() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Postal Code</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Postal Code
+                        </label>
                         <input
                           type="text"
                           name="postalCode"
@@ -226,7 +322,9 @@ export default function CheckoutFlow() {
                   </div>
 
                   {/* Shipping Method Selection */}
-                  <h3 className="text-lg font-semibold mt-8 mb-4">Shipping Method</h3>
+                  <h3 className="text-lg font-semibold mt-8 mb-4">
+                    Shipping Method
+                  </h3>
                   <div className="space-y-3">
                     {SHIPPING_METHODS.map((method) => (
                       <label
@@ -248,11 +346,19 @@ export default function CheckoutFlow() {
                           />
                           <div>
                             <p className="font-medium text-sm">{method.name}</p>
-                            <p className="text-xs text-foreground/50">{method.days}</p>
+                            <p className="text-xs text-foreground/50">
+                              {method.days}
+                            </p>
                           </div>
                         </div>
                         <span className="font-semibold text-sm">
-                          {method.id === "standard" ? "Free" : method.id === "express" ? "$25" : method.id === "priority" ? "$45" : "$75"}
+                          {method.id === "standard"
+                            ? "Free"
+                            : method.id === "express"
+                            ? "$25"
+                            : method.id === "priority"
+                            ? "$45"
+                            : "$75"}
                         </span>
                       </label>
                     ))}
@@ -264,68 +370,86 @@ export default function CheckoutFlow() {
               {currentStep === 3 && (
                 <div>
                   <h2 className="text-xl font-display font-bold mb-6">
-                    Payment Method
+                    Payment
                   </h2>
-                  <div className="space-y-4">
-                    {/* PayPal Option */}
-                    <div className="p-6 border-2 border-accent rounded-xl bg-accent/5">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-[#003087] rounded-lg flex items-center justify-center">
-                          <span className="text-white font-bold text-xs">PP</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold">PayPal</p>
-                          <p className="text-xs text-foreground/50">
-                            Pay with PayPal, Credit or Debit Card
-                          </p>
-                        </div>
-                      </div>
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                        <p className="text-sm text-yellow-800">
-                          You will be redirected to PayPal to complete your payment securely.
-                        </p>
-                        <button className="mt-3 px-8 py-3 bg-[#FFC439] text-[#003087] font-bold rounded-full hover:bg-[#F0B429] transition-colors">
-                          Pay with PayPal
-                        </button>
-                      </div>
-                    </div>
 
-                    {/* Credit Card Option */}
-                    <div className="p-6 border rounded-xl">
-                      <div className="flex items-center gap-3 mb-4">
-                        <CreditCard className="w-5 h-5 text-secondary" />
-                        <p className="font-semibold">Credit / Debit Card</p>
+                  {paymentError && (
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                      {paymentError}
+                    </div>
+                  )}
+
+                  {/* Order Summary Before Payment */}
+                  <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-foreground/60">Subtotal</span>
+                      <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600 mb-1">
+                        <span>Discount</span>
+                        <span>-${discountAmount.toFixed(2)}</span>
                       </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Card Number</label>
-                          <input
-                            type="text"
-                            placeholder="1234 5678 9012 3456"
-                            className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Expiry</label>
-                            <input
-                              type="text"
-                              placeholder="MM/YY"
-                              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-1">CVC</label>
-                            <input
-                              type="text"
-                              placeholder="123"
-                              className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/50"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                    )}
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-foreground/60">Shipping</span>
+                      <span>
+                        {shippingCost === 0 ? "Free" : `$${shippingCost}`}
+                      </span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between font-bold">
+                      <span>Total</span>
+                      <span>${total.toFixed(2)}</span>
                     </div>
                   </div>
+
+                  {/* PayPal Buttons */}
+                  <div className="border rounded-xl p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Lock className="w-4 h-4 text-green-600" />
+                      <span className="text-sm text-foreground/60">
+                        Secure payment powered by PayPal
+                      </span>
+                    </div>
+
+                    <PayPalProvider>
+                      <PayPalCheckoutButton
+                        amount={total}
+                        items={items.map((item) => ({
+                          id: item.id,
+                          name: item.name,
+                          price: item.price,
+                          quantity: item.quantity,
+                          sku: item.sku,
+                          size: item.size,
+                          color: item.color,
+                          image: item.image,
+                        }))}
+                        shippingAddress={{
+                          firstName: formData.firstName,
+                          lastName: formData.lastName,
+                          address1: formData.address1,
+                          address2: formData.address2,
+                          city: formData.city,
+                          state: formData.state,
+                          postalCode: formData.postalCode,
+                          country: formData.country,
+                        }}
+                        shippingMethod={formData.shippingMethod}
+                        shippingCost={shippingCost}
+                        discount={discountAmount}
+                        subtotal={subtotal}
+                        onSuccess={handlePaymentSuccess}
+                        onError={handlePaymentError}
+                      />
+                    </PayPalProvider>
+
+                    <p className="text-xs text-foreground/40 mt-4 text-center">
+                      You can pay with PayPal balance, credit card, or debit
+                      card through PayPal.
+                    </p>
+                  </div>
+
                   <div className="flex items-center gap-2 mt-4 text-xs text-foreground/50">
                     <Lock className="w-3 h-3" />
                     Your payment information is encrypted and secure.
@@ -333,7 +457,7 @@ export default function CheckoutFlow() {
                 </div>
               )}
 
-              {/* Step 4: Review */}
+              {/* Step 4: Review (now only shows after completing info/shipping before payment) */}
               {currentStep === 4 && (
                 <div>
                   <h2 className="text-xl font-display font-bold mb-6">
@@ -342,7 +466,9 @@ export default function CheckoutFlow() {
                   <div className="space-y-6">
                     {/* Items */}
                     <div>
-                      <h3 className="font-semibold mb-3">Items ({items.length})</h3>
+                      <h3 className="font-semibold mb-3">
+                        Items ({items.length})
+                      </h3>
                       <div className="space-y-3">
                         {items.map((item) => (
                           <div
@@ -351,7 +477,9 @@ export default function CheckoutFlow() {
                           >
                             <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{item.name}</p>
+                              <p className="text-sm font-medium truncate">
+                                {item.name}
+                              </p>
                               <p className="text-xs text-foreground/50">
                                 {item.size} | Qty: {item.quantity}
                               </p>
@@ -366,7 +494,9 @@ export default function CheckoutFlow() {
 
                     {/* Shipping Info */}
                     <div className="p-4 bg-gray-50 rounded-xl">
-                      <h3 className="font-semibold text-sm mb-2">Shipping To</h3>
+                      <h3 className="font-semibold text-sm mb-2">
+                        Shipping To
+                      </h3>
                       <p className="text-sm text-foreground/70">
                         {formData.firstName} {formData.lastName}
                         <br />
@@ -379,8 +509,12 @@ export default function CheckoutFlow() {
                       </p>
                     </div>
 
-                    <button className="btn-gold w-full text-center">
-                      Place Order — ${total.toFixed(2)}
+                    {/* Proceed to payment */}
+                    <button
+                      onClick={() => setCurrentStep(3)}
+                      className="btn-gold w-full text-center"
+                    >
+                      Proceed to Payment — ${total.toFixed(2)}
                     </button>
                   </div>
                 </div>
@@ -398,11 +532,12 @@ export default function CheckoutFlow() {
                 ) : (
                   <div />
                 )}
-                {currentStep < 4 && (
+                {currentStep < 3 && (
                   <button onClick={nextStep} className="btn-primary">
                     Continue
                   </button>
                 )}
+                {currentStep === 3 && <div />}
               </div>
             </motion.div>
           </div>
@@ -436,7 +571,9 @@ export default function CheckoutFlow() {
                   )}
                   <div className="flex justify-between">
                     <span className="text-foreground/60">Shipping</span>
-                    <span>{shippingCost === 0 ? "Free" : `$${shippingCost}`}</span>
+                    <span>
+                      {shippingCost === 0 ? "Free" : `$${shippingCost}`}
+                    </span>
                   </div>
                   <div className="border-t pt-3 flex justify-between font-bold text-base">
                     <span>Total</span>
