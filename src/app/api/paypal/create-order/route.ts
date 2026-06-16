@@ -25,6 +25,8 @@ async function getPayPalAccessToken(): Promise<string> {
   });
 
   if (!res.ok) {
+    const errText = await res.text();
+    console.error("PayPal auth error:", errText);
     throw new Error("Failed to get PayPal access token");
   }
 
@@ -34,7 +36,7 @@ async function getPayPalAccessToken(): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, currency = "USD", items, shippingAddress } = await request.json();
+    const { amount, currency = "USD" } = await request.json();
 
     if (!amount || amount <= 0) {
       return NextResponse.json(
@@ -45,75 +47,23 @@ export async function POST(request: NextRequest) {
 
     const accessToken = await getPayPalAccessToken();
 
-    // Build PayPal order payload
-    const purchaseUnit: Record<string, unknown> = {
-      amount: {
-        currency_code: currency,
-        value: amount.toFixed(2),
-      },
-    };
-
-    // Only add item breakdown if items are provided and valid
-    if (items && items.length > 0) {
-      const validItems = items.filter(
-        (item: { name: string; quantity: number; price: number }) =>
-          item.quantity > 0 && item.price > 0
-      );
-
-      if (validItems.length > 0) {
-        const itemTotal = validItems.reduce(
-          (sum: number, item: { price: number; quantity: number }) =>
-            sum + item.price * item.quantity,
-          0
-        );
-
-        purchaseUnit.amount = {
-          currency_code: currency,
-          value: amount.toFixed(2),
-          breakdown: {
-            item_total: {
-              currency_code: currency,
-              value: itemTotal.toFixed(2),
-            },
-            shipping: {
-              currency_code: currency,
-              value: (amount - itemTotal).toFixed(2),
-            },
-          },
-        };
-
-        purchaseUnit.items = validItems.map(
-          (item: { name: string; quantity: number; price: number }) => ({
-            name: item.name.substring(0, 127),
-            quantity: String(item.quantity),
-            unit_amount: {
-              currency_code: currency,
-              value: item.price.toFixed(2),
-            },
-          })
-        );
-      }
-    }
-
-    if (shippingAddress) {
-      purchaseUnit.shipping = {
-        name: {
-          full_name: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
-        },
-        address: {
-          address_line_1: shippingAddress.address1,
-          address_line_2: shippingAddress.address2 || undefined,
-          admin_area_2: shippingAddress.city,
-          admin_area_1: shippingAddress.state,
-          postal_code: shippingAddress.postalCode,
-          country_code: shippingAddress.country,
-        },
-      };
-    }
-
+    // Simple payload without item breakdown to avoid mismatch errors
     const orderPayload = {
       intent: "CAPTURE",
-      purchase_units: [purchaseUnit],
+      purchase_units: [
+        {
+          description: "Batikora - Premium Indonesian Batik",
+          amount: {
+            currency_code: currency,
+            value: amount.toFixed(2),
+          },
+        },
+      ],
+      application_context: {
+        brand_name: "Batikora",
+        shipping_preference: "NO_SHIPPING",
+        user_action: "PAY_NOW",
+      },
     };
 
     const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
@@ -127,9 +77,9 @@ export async function POST(request: NextRequest) {
 
     if (!res.ok) {
       const errorData = await res.json();
-      console.error("PayPal create order error:", errorData);
+      console.error("PayPal create order error:", JSON.stringify(errorData, null, 2));
       return NextResponse.json(
-        { error: "Failed to create PayPal order" },
+        { error: "Failed to create PayPal order", details: errorData },
         { status: 500 }
       );
     }

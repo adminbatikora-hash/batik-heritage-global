@@ -76,7 +76,8 @@ export default function PayPalCheckoutButton({
         createOrder={async () => {
           try {
             if (amount <= 0) {
-              throw new Error("Order amount must be greater than $0");
+              onError("Order amount must be greater than $0. Please add items to cart.");
+              throw new Error("Invalid amount");
             }
 
             const res = await fetch("/api/paypal/create-order", {
@@ -85,26 +86,25 @@ export default function PayPalCheckoutButton({
               body: JSON.stringify({
                 amount,
                 currency: "USD",
-                items: items.map((item) => ({
-                  name: item.name,
-                  quantity: item.quantity,
-                  price: item.price,
-                })),
-                shippingAddress,
               }),
             });
 
+            const data = await res.json();
+
             if (!res.ok) {
-              throw new Error("Failed to create order");
+              console.error("Create order failed:", data);
+              onError(data.error || "Failed to create PayPal order. Please try again.");
+              throw new Error(data.error || "Failed to create order");
             }
 
-            const data = await res.json();
             return data.id;
           } catch (err) {
-            onError("Failed to create PayPal order. Please try again.");
+            if (!(err instanceof Error && err.message === "Invalid amount")) {
+              onError("Failed to create PayPal order. Please try again.");
+            }
             throw err;
           }
-        }}
+        }}}
         onApprove={async (data) => {
           setProcessing(true);
           try {
