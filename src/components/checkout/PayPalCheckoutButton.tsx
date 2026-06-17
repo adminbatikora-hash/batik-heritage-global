@@ -104,7 +104,7 @@ export default function PayPalCheckoutButton({
             }
             throw err;
           }
-        }}}
+        }}
         onApprove={async (data) => {
           setProcessing(true);
           try {

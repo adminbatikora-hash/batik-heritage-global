@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -11,12 +11,33 @@ import {
   Lock,
   PartyPopper,
   ShoppingBag,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCartStore } from "@/store/useCartStore";
-import { SUPPORTED_COUNTRIES, SHIPPING_METHODS } from "@/lib/constants";
+import { SUPPORTED_COUNTRIES } from "@/lib/constants";
 import PayPalProvider from "./PayPalProvider";
 import PayPalCheckoutButton from "./PayPalCheckoutButton";
+
+interface ShippingRate {
+  carrier: string;
+  carrierLogo: string;
+  service: string;
+  serviceName: string;
+  price: number;
+  currency: string;
+  estimatedDays: string;
+  description?: string;
+}
+
+interface ShippingRatesResponse {
+  country: string;
+  isDomestic: boolean;
+  availableCarriers: string[];
+  rates: ShippingRate[];
+  totalOptions: number;
+}
 
 const steps = [
   { id: 1, name: "Information", icon: User },
@@ -30,6 +51,10 @@ export default function CheckoutFlow() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const [paypalOrderId, setPaypalOrderId] = useState("");
+  const [shippingRates, setShippingRates] = useState<ShippingRate[]>([]);
+  const [availableCarriers, setAvailableCarriers] = useState<string[]>([]);
+  const [loadingRates, setLoadingRates] = useState(false);
+  const [selectedRateIndex, setSelectedRateIndex] = useState(-1);
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
@@ -41,19 +66,57 @@ export default function CheckoutFlow() {
     state: "",
     postalCode: "",
     country: "",
-    shippingMethod: "standard",
   });
 
-  const { items, getSubtotal, discount, clearCart } = useCartStore();
+  const { items, getSubtotal, getTotalWeight, discount, clearCart } = useCartStore();
   const subtotal = getSubtotal();
-  const shippingCost =
-    formData.shippingMethod === "standard"
-      ? 0
-      : formData.shippingMethod === "express"
-      ? 25
-      : 45;
+  const totalWeight = getTotalWeight();
+
+  // Get selected shipping rate price
+  const selectedRate = selectedRateIndex >= 0 ? shippingRates[selectedRateIndex] : null;
+  const shippingCost = selectedRate?.price ?? 0;
   const discountAmount = discount > 0 ? subtotal * (discount / 100) : 0;
   const total = subtotal + shippingCost - discountAmount;
+
+  // Fetch shipping rates when country changes
+  const fetchShippingRates = useCallback(async (countryCode: string) => {
+    if (!countryCode) {
+      setShippingRates([]);
+      setSelectedRateIndex(-1);
+      return;
+    }
+
+    setLoadingRates(true);
+    try {
+      const params = new URLSearchParams({
+        country: countryCode,
+        city: formData.city || "",
+        postalCode: formData.postalCode || "",
+        weight: totalWeight.toFixed(2),
+      });
+
+      const res = await fetch(`/api/shipping/rates?${params.toString()}`);
+      if (res.ok) {
+        const data: ShippingRatesResponse = await res.json();
+        setShippingRates(data.rates);
+        setAvailableCarriers(data.availableCarriers);
+        // Auto-select the first (cheapest) rate
+        if (data.rates.length > 0) {
+          setSelectedRateIndex(0);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch shipping rates:", error);
+    } finally {
+      setLoadingRates(false);
+    }
+  }, [formData.city, formData.postalCode, totalWeight]);
+
+  useEffect(() => {
+    if (formData.country) {
+      fetchShippingRates(formData.country);
+    }
+  }, [formData.country, fetchShippingRates]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -230,7 +293,7 @@ export default function CheckoutFlow() {
                 </div>
               )}
 
-              {/* Step 2: Shipping Address */}
+              {/* Step 2: Shipping Address & Method */}
               {currentStep === 2 && (
                 <div>
                   <h2 className="text-xl font-display font-bold mb-6">
@@ -321,48 +384,86 @@ export default function CheckoutFlow() {
                     </div>
                   </div>
 
-                  {/* Shipping Method Selection */}
-                  <h3 className="text-lg font-semibold mt-8 mb-4">
+                  {/* Shipping Method Selection - Real-time from Carriers */}
+                  <h3 className="text-lg font-semibold mt-8 mb-4 flex items-center gap-2">
+                    <Truck className="w-5 h-5" />
                     Shipping Method
                   </h3>
-                  <div className="space-y-3">
-                    {SHIPPING_METHODS.map((method) => (
-                      <label
-                        key={method.id}
-                        className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${
-                          formData.shippingMethod === method.id
-                            ? "border-accent bg-accent/5"
-                            : "border-gray-200 hover:border-accent/50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="shippingMethod"
-                            value={method.id}
-                            checked={formData.shippingMethod === method.id}
-                            onChange={handleChange}
-                            className="text-accent focus:ring-accent"
-                          />
-                          <div>
-                            <p className="font-medium text-sm">{method.name}</p>
-                            <p className="text-xs text-foreground/50">
-                              {method.days}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="font-semibold text-sm">
-                          {method.id === "standard"
-                            ? "Free"
-                            : method.id === "express"
-                            ? "$25"
-                            : method.id === "priority"
-                            ? "$45"
-                            : "$75"}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+
+                  {!formData.country && (
+                    <p className="text-sm text-foreground/50 italic">
+                      Please select a country to see available shipping options.
+                    </p>
+                  )}
+
+                  {loadingRates && (
+                    <div className="flex items-center gap-2 py-4">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-sm text-foreground/60">
+                        Fetching live rates from carriers...
+                      </span>
+                    </div>
+                  )}
+
+                  {!loadingRates && formData.country && shippingRates.length > 0 && (
+                    <>
+                      <p className="text-xs text-foreground/50 mb-3">
+                        Available carriers: {availableCarriers.join(", ")}
+                        <span className="ml-2">• Package weight: {totalWeight.toFixed(1)} kg</span>
+                      </p>
+                      <div className="space-y-3">
+                        {shippingRates.map((rate, idx) => (
+                          <label
+                            key={`${rate.carrier}-${rate.service}`}
+                            className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all ${
+                              selectedRateIndex === idx
+                                ? "border-accent bg-accent/5"
+                                : "border-gray-200 hover:border-accent/50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="radio"
+                                name="shippingRate"
+                                checked={selectedRateIndex === idx}
+                                onChange={() => setSelectedRateIndex(idx)}
+                                className="text-accent focus:ring-accent"
+                              />
+                              <div className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-lg flex-shrink-0">
+                                <Image
+                                  src={rate.carrierLogo}
+                                  alt={rate.carrier}
+                                  width={28}
+                                  height={28}
+                                  className="object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = "none";
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {rate.serviceName}
+                                </p>
+                                <p className="text-xs text-foreground/50">
+                                  {rate.carrier} • {rate.estimatedDays}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="font-semibold text-sm">
+                              ${rate.price.toFixed(2)}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {!loadingRates && formData.country && shippingRates.length === 0 && (
+                    <p className="text-sm text-red-500">
+                      No shipping options available for this destination. Please check your address or contact support.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -398,9 +499,20 @@ export default function CheckoutFlow() {
                       </div>
                     )}
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="text-foreground/60">Shipping</span>
+                      <span className="text-foreground/60">
+                        Shipping
+                        {selectedRate && (
+                          <span className="text-foreground/40 ml-1">
+                            ({selectedRate.serviceName})
+                          </span>
+                        )}
+                      </span>
                       <span>
-                        {shippingCost === 0 ? "Free" : `$${shippingCost}`}
+                        {shippingCost === 0 ? (
+                          <span className="text-green-600">Free</span>
+                        ) : (
+                          `$${shippingCost.toFixed(2)}`
+                        )}
                       </span>
                     </div>
                     <div className="border-t pt-2 flex justify-between font-bold">
@@ -441,7 +553,7 @@ export default function CheckoutFlow() {
                           postalCode: formData.postalCode,
                           country: formData.country,
                         }}
-                        shippingMethod={formData.shippingMethod}
+                        shippingMethod={selectedRate?.serviceName || "Standard"}
                         shippingCost={shippingCost}
                         discount={discountAmount}
                         subtotal={subtotal}
@@ -463,7 +575,7 @@ export default function CheckoutFlow() {
                 </div>
               )}
 
-              {/* Step 4: Review (now only shows after completing info/shipping before payment) */}
+              {/* Step 4: Review */}
               {currentStep === 4 && (
                 <div>
                   <h2 className="text-xl font-display font-bold mb-6">
@@ -478,7 +590,7 @@ export default function CheckoutFlow() {
                       <div className="space-y-3">
                         {items.map((item) => (
                           <div
-                            key={`${item.id}-${item.size}`}
+                            key={`${item.id}-${item.color}`}
                             className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                           >
                             <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0" />
@@ -487,7 +599,7 @@ export default function CheckoutFlow() {
                                 {item.name}
                               </p>
                               <p className="text-xs text-foreground/50">
-                                {item.size} | Qty: {item.quantity}
+                                Qty: {item.quantity}
                               </p>
                             </div>
                             <span className="font-semibold text-sm">
@@ -511,8 +623,20 @@ export default function CheckoutFlow() {
                         <br />
                         {formData.city}, {formData.state} {formData.postalCode}
                         <br />
-                        {formData.country}
+                        {SUPPORTED_COUNTRIES.find(
+                          (c) => c.code === formData.country
+                        )?.name || formData.country}
                       </p>
+                      {selectedRate && (
+                        <p className="text-sm text-foreground/60 mt-2">
+                          <Truck className="w-3.5 h-3.5 inline mr-1" />
+                          {selectedRate.serviceName}
+                          {` — ${selectedRate.estimatedDays}`}
+                          <span className="ml-2 font-medium">
+                            ${selectedRate.price.toFixed(2)}
+                          </span>
+                        </p>
+                      )}
                     </div>
 
                     {/* Proceed to payment */}
@@ -555,7 +679,7 @@ export default function CheckoutFlow() {
               <div className="space-y-3 text-sm">
                 {items.map((item) => (
                   <div
-                    key={`${item.id}-${item.size}`}
+                    key={`${item.id}-${item.color}`}
                     className="flex justify-between"
                   >
                     <span className="text-foreground/60 truncate mr-2">
@@ -578,9 +702,18 @@ export default function CheckoutFlow() {
                   <div className="flex justify-between">
                     <span className="text-foreground/60">Shipping</span>
                     <span>
-                      {shippingCost === 0 ? "Free" : `$${shippingCost}`}
+                      {shippingCost === 0 ? (
+                        <span className="text-green-600">Free</span>
+                      ) : (
+                        `$${shippingCost.toFixed(2)}`
+                      )}
                     </span>
                   </div>
+                  {selectedRate && (
+                    <p className="text-xs text-foreground/40">
+                      {selectedRate.carrier} — {selectedRate.estimatedDays}
+                    </p>
+                  )}
                   <div className="border-t pt-3 flex justify-between font-bold text-base">
                     <span>Total</span>
                     <span>${total.toFixed(2)}</span>

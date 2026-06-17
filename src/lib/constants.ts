@@ -26,15 +26,37 @@ export const CURRENCIES = [
 ] as const;
 
 export const SUPPORTED_COUNTRIES = [
+  // Asia Pacific
+  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
+  { code: "SG", name: "Singapore", flag: "🇸🇬" },
+  { code: "JP", name: "Japan", flag: "🇯🇵" },
+  { code: "AU", name: "Australia", flag: "🇦🇺" },
+  { code: "NZ", name: "New Zealand", flag: "🇳🇿" },
+  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
+  { code: "TH", name: "Thailand", flag: "🇹🇭" },
+  { code: "KR", name: "South Korea", flag: "🇰🇷" },
+  { code: "PH", name: "Philippines", flag: "🇵🇭" },
+  { code: "IN", name: "India", flag: "🇮🇳" },
+  { code: "HK", name: "Hong Kong", flag: "🇭🇰" },
+  // North America
   { code: "US", name: "United States", flag: "🇺🇸" },
   { code: "CA", name: "Canada", flag: "🇨🇦" },
+  // Europe
   { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
   { code: "DE", name: "Germany", flag: "🇩🇪" },
   { code: "FR", name: "France", flag: "🇫🇷" },
-  { code: "AU", name: "Australia", flag: "🇦🇺" },
-  { code: "SG", name: "Singapore", flag: "🇸🇬" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
+  { code: "NL", name: "Netherlands", flag: "🇳🇱" },
+  { code: "IT", name: "Italy", flag: "🇮🇹" },
+  { code: "ES", name: "Spain", flag: "🇪🇸" },
+  { code: "SE", name: "Sweden", flag: "🇸🇪" },
+  { code: "CH", name: "Switzerland", flag: "🇨🇭" },
+  { code: "BE", name: "Belgium", flag: "🇧🇪" },
+  // Middle East
+  { code: "AE", name: "United Arab Emirates", flag: "🇦🇪" },
+  { code: "SA", name: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "QA", name: "Qatar", flag: "🇶🇦" },
+  { code: "KW", name: "Kuwait", flag: "🇰🇼" },
+  { code: "BH", name: "Bahrain", flag: "🇧🇭" },
 ] as const;
 
 export const SHIPPING_METHODS = [
@@ -43,6 +65,42 @@ export const SHIPPING_METHODS = [
   { id: "priority", name: "Priority Shipping", days: "3-5 days" },
   { id: "overnight", name: "Overnight Shipping", days: "1-2 days" },
 ] as const;
+
+// Country-to-zone mapping for quick reference
+export const COUNTRY_ZONES: Record<string, string> = {
+  // Domestic
+  ID: "Domestic (Indonesia)",
+  // Asia Pacific
+  SG: "Asia Pacific",
+  JP: "Asia Pacific",
+  AU: "Asia Pacific",
+  NZ: "Asia Pacific",
+  MY: "Asia Pacific",
+  TH: "Asia Pacific",
+  KR: "Asia Pacific",
+  PH: "Asia Pacific",
+  IN: "Asia Pacific",
+  HK: "Asia Pacific",
+  // North America
+  US: "North America",
+  CA: "North America",
+  // Europe
+  GB: "Europe",
+  DE: "Europe",
+  FR: "Europe",
+  NL: "Europe",
+  IT: "Europe",
+  ES: "Europe",
+  SE: "Europe",
+  CH: "Europe",
+  BE: "Europe",
+  // Middle East
+  AE: "Middle East",
+  SA: "Middle East",
+  QA: "Middle East",
+  KW: "Middle East",
+  BH: "Middle East",
+};
 
 export const CATEGORIES = [
   { name: "Men Batik", slug: "men-batik" },

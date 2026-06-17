@@ -255,32 +255,54 @@ async function main() {
   }
 
   // ==================== SHIPPING ZONES ====================
+  // Clear existing shipping data first
+  await prisma.shippingRate.deleteMany({});
+  await prisma.shippingZone.deleteMany({});
+
   const shippingZones = [
+    {
+      name: "Domestic (Indonesia)",
+      countries: ["ID"],
+      rates: [
+        { name: "Regular", carrier: "JNE", price: 5, estimatedDays: "3-5 days" },
+        { name: "Express", carrier: "JNE YES", price: 10, estimatedDays: "1-2 days" },
+        { name: "Same Day", carrier: "GoSend", price: 15, estimatedDays: "Same day" },
+      ],
+    },
+    {
+      name: "Asia Pacific",
+      countries: ["SG", "MY", "TH", "PH", "JP", "KR", "AU", "NZ", "IN", "HK"],
+      rates: [
+        { name: "Standard", carrier: "EMS", price: 12, estimatedDays: "7-10 days" },
+        { name: "Express", carrier: "DHL", price: 22, estimatedDays: "4-6 days" },
+        { name: "Priority", carrier: "FedEx", price: 40, estimatedDays: "2-4 days" },
+      ],
+    },
     {
       name: "North America",
       countries: ["US", "CA"],
       rates: [
         { name: "Standard", carrier: "USPS", price: 15, estimatedDays: "10-14 days" },
-        { name: "Express", carrier: "FedEx", price: 25, estimatedDays: "5-7 days" },
-        { name: "Priority", carrier: "DHL", price: 45, estimatedDays: "3-5 days" },
+        { name: "Express", carrier: "FedEx", price: 28, estimatedDays: "5-7 days" },
+        { name: "Priority", carrier: "DHL", price: 48, estimatedDays: "3-5 days" },
       ],
     },
     {
       name: "Europe",
-      countries: ["GB", "DE", "FR"],
+      countries: ["GB", "DE", "FR", "NL", "IT", "ES", "SE", "CH", "BE"],
       rates: [
-        { name: "Standard", carrier: "Royal Mail", price: 18, estimatedDays: "12-16 days" },
-        { name: "Express", carrier: "DHL", price: 30, estimatedDays: "5-7 days" },
-        { name: "Priority", carrier: "FedEx", price: 50, estimatedDays: "3-5 days" },
+        { name: "Standard", carrier: "PostNL", price: 18, estimatedDays: "10-14 days" },
+        { name: "Express", carrier: "DHL", price: 32, estimatedDays: "5-7 days" },
+        { name: "Priority", carrier: "FedEx", price: 52, estimatedDays: "3-5 days" },
       ],
     },
     {
-      name: "Asia Pacific",
-      countries: ["AU", "SG", "JP"],
+      name: "Middle East",
+      countries: ["AE", "SA", "QA", "KW", "BH"],
       rates: [
-        { name: "Standard", carrier: "EMS", price: 12, estimatedDays: "7-10 days" },
-        { name: "Express", carrier: "DHL", price: 22, estimatedDays: "4-6 days" },
-        { name: "Priority", carrier: "FedEx", price: 40, estimatedDays: "2-4 days" },
+        { name: "Standard", carrier: "Aramex", price: 20, estimatedDays: "10-14 days" },
+        { name: "Express", carrier: "DHL", price: 35, estimatedDays: "5-7 days" },
+        { name: "Priority", carrier: "FedEx", price: 55, estimatedDays: "3-5 days" },
       ],
     },
   ];
@@ -402,6 +424,16 @@ async function main() {
     { key: "free_shipping_threshold", value: "150" },
     { key: "tax_rate", value: "0" },
     { key: "business_hours", value: "Mon-Fri 9AM-6PM WIB, Sat 9AM-3PM WIB" },
+    // Shipping origin settings
+    { key: "shipping_origin_city", value: "Yogyakarta" },
+    { key: "shipping_origin_city_id", value: "501" },
+    { key: "shipping_origin_postal_code", value: "55000" },
+    { key: "shipping_origin_country", value: "ID" },
+    { key: "shipping_origin_address", value: "Jl. Malioboro No. 1, Yogyakarta" },
+    // Carrier enable/disable
+    { key: "carrier_dhl_enabled", value: "true" },
+    { key: "carrier_jne_enabled", value: "true" },
+    { key: "carrier_pos_enabled", value: "true" },
   ];
 
   for (const setting of settings) {

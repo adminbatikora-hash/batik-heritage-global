@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
       shippingAddress,
       billingAddress,
       shippingMethod,
+      shippingRateId,
+      shippingCost: clientShippingCost,
       couponId,
       currency,
     } = body;
@@ -91,8 +93,39 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Calculate shipping
-    const shipping = subtotal > 150 ? 0 : 15;
+    // Calculate shipping from database rate
+    let shipping = 0;
+    if (shippingRateId) {
+      // Look up the rate from the database for server-side validation
+      const rate = await prisma.shippingRate.findUnique({
+        where: { id: shippingRateId },
+        include: { zone: true },
+      });
+
+      if (rate) {
+        // Determine free shipping threshold based on zone
+        const freeThresholds: Record<string, number> = {
+          "Domestic (Indonesia)": 50,
+          "Asia Pacific": 100,
+          "North America": 150,
+          "Europe": 150,
+          "Middle East": 175,
+        };
+        const threshold = freeThresholds[rate.zone.name] ?? 200;
+
+        // Apply free shipping if subtotal exceeds threshold
+        shipping = subtotal >= threshold ? 0 : Number(rate.price);
+      } else {
+        // Fallback to client-provided cost if rate not found
+        shipping = clientShippingCost ?? 15;
+      }
+    } else if (clientShippingCost !== undefined) {
+      // If no rate ID but client sent a cost (e.g., from PayPal flow)
+      shipping = clientShippingCost;
+    } else {
+      // Legacy fallback
+      shipping = subtotal > 150 ? 0 : 15;
+    }
 
     // Apply coupon
     let discount = 0;
@@ -108,6 +141,8 @@ export async function POST(request: NextRequest) {
           }
         } else if (coupon.type === "FIXED") {
           discount = Number(coupon.value);
+        } else if (coupon.type === "FREE_SHIPPING") {
+          shipping = 0;
         }
       }
     }

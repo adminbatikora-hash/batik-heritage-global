@@ -284,7 +284,6 @@ interface ProductDetailProps {
 export default function ProductDetail({ slug }: ProductDetailProps) {
   const [product, setProduct] = useState(FALLBACK_PRODUCT);
   const [loading, setLoading] = useState(true);
-  const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string }>({ name: "", hex: "" });
   const [quantity, setQuantity] = useState(1);
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -314,7 +313,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
             stock: data.stock,
             rating: Number(data.rating) || 0,
             reviewCount: data.reviewCount || 0,
-            sizes: data.sizes?.map((s: { name: string }) => s.name) || ["M", "L", "XL"],
+            sizes: [],
             colors: data.colors?.length > 0 ? data.colors : [],
             images: data.images?.map((img: { url: string }) => img.url) || ["/products/placeholder.png"],
             features: [
@@ -347,16 +346,11 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
   }
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      toast.error("Please select a size");
-      return;
-    }
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.images[0],
-      size: selectedSize,
       color: selectedColor.name,
       quantity,
       sku: product.sku,
@@ -485,31 +479,6 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
               </div>
             </div>
             )}
-
-            {/* Size Selection */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium">Size</p>
-                <button className="text-xs text-secondary hover:underline">
-                  Size Guide
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`min-w-[3rem] px-4 py-2.5 border rounded-lg text-sm font-medium transition-all ${
-                      selectedSize === size
-                        ? "bg-primary text-white border-primary"
-                        : "border-gray-200 hover:border-accent text-foreground/70"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Quantity */}
             <div>

@@ -11,6 +11,7 @@ export interface CartProduct {
   quantity: number;
   sku: string;
   slug: string;
+  weight?: number; // in kg
 }
 
 interface CartState {
@@ -25,6 +26,7 @@ interface CartState {
   removeCoupon: () => void;
   getSubtotal: () => number;
   getItemCount: () => number;
+  getTotalWeight: () => number;
 }
 
 export const useCartStore = create<CartState>()(
@@ -39,7 +41,6 @@ export const useCartStore = create<CartState>()(
         const existingIndex = items.findIndex(
           (item) =>
             item.id === product.id &&
-            item.size === product.size &&
             item.color === product.color
         );
 
@@ -52,23 +53,23 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      removeItem: (id, size, color) => {
+      removeItem: (id, _size, color) => {
         set({
           items: get().items.filter(
             (item) =>
-              !(item.id === id && item.size === size && item.color === color)
+              !(item.id === id && item.color === color)
           ),
         });
       },
 
-      updateQuantity: (id, quantity, size, color) => {
+      updateQuantity: (id, quantity, _size, color) => {
         if (quantity <= 0) {
-          get().removeItem(id, size, color);
+          get().removeItem(id, _size, color);
           return;
         }
         set({
           items: get().items.map((item) =>
-            item.id === id && item.size === size && item.color === color
+            item.id === id && item.color === color
               ? { ...item, quantity }
               : item
           ),
@@ -86,6 +87,12 @@ export const useCartStore = create<CartState>()(
 
       getItemCount: () =>
         get().items.reduce((sum, item) => sum + item.quantity, 0),
+
+      getTotalWeight: () =>
+        get().items.reduce(
+          (sum, item) => sum + (item.weight || 0.3) * item.quantity,
+          0
+        ),
     }),
     {
       name: "batik-heritage-cart",

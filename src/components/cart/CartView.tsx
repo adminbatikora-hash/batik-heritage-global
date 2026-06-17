@@ -89,7 +89,7 @@ export default function CartView() {
             <AnimatePresence>
               {items.map((item) => (
                 <motion.div
-                  key={`${item.id}-${item.size}-${item.color}`}
+                  key={`${item.id}-${item.color}`}
                   layout
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -124,8 +124,7 @@ export default function CartView() {
                           {item.name}
                         </Link>
                         <p className="text-xs text-foreground/50 mt-1">
-                          {item.size && `Size: ${item.size}`}
-                          {item.color && ` | Color: ${item.color}`}
+                          {item.color && `Color: ${item.color}`}
                         </p>
                       </div>
                       <button
