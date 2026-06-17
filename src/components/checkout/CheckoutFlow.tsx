@@ -130,10 +130,16 @@ export default function CheckoutFlow() {
   const handlePaymentSuccess = (details: {
     captureId: string;
     paypalOrderId: string;
+    whatsappUrl?: string;
   }) => {
     setPaypalOrderId(details.paypalOrderId);
     setOrderComplete(true);
     clearCart();
+
+    // Open WhatsApp notification to admin
+    if (details.whatsappUrl) {
+      window.open(details.whatsappUrl, "_blank");
+    }
   };
 
   const handlePaymentError = (error: string) => {

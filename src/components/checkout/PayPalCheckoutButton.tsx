@@ -30,7 +30,7 @@ interface PayPalCheckoutButtonProps {
   shippingCost: number;
   discount: number;
   subtotal: number;
-  onSuccess: (details: { captureId: string; paypalOrderId: string }) => void;
+  onSuccess: (details: { captureId: string; paypalOrderId: string; whatsappUrl?: string }) => void;
   onError: (error: string) => void;
 }
 
@@ -144,6 +144,7 @@ export default function PayPalCheckoutButton({
               onSuccess({
                 captureId: captureData.captureId,
                 paypalOrderId: captureData.paypalOrderId,
+                whatsappUrl: captureData.whatsappUrl,
               });
             } else {
               onError("Payment was not completed. Please try again.");

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { buildWhatsAppNotification } from "@/lib/whatsapp";
 
 const PAYPAL_API_BASE =
   process.env.PAYPAL_MODE === "live"
@@ -118,6 +119,42 @@ export async function POST(request: NextRequest) {
               ),
             },
           },
+        });
+
+        // Generate WhatsApp notification for admin
+        const whatsapp = buildWhatsAppNotification({
+          orderNumber,
+          customerName: `${orderData.shippingAddress?.firstName || ""} ${orderData.shippingAddress?.lastName || ""}`.trim(),
+          customerEmail: orderData.email || "",
+          customerPhone: orderData.phone || "",
+          shippingAddress: {
+            address1: orderData.shippingAddress?.address1 || "",
+            address2: orderData.shippingAddress?.address2 || "",
+            city: orderData.shippingAddress?.city || "",
+            state: orderData.shippingAddress?.state || "",
+            postalCode: orderData.shippingAddress?.postalCode || "",
+            country: orderData.shippingAddress?.country || "",
+          },
+          items: orderData.items?.map((item: { name: string; quantity: number; price: number }) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })) || [],
+          shippingMethod: orderData.shippingMethod || "Standard",
+          shippingCost: orderData.shipping || 0,
+          subtotal: orderData.subtotal || 0,
+          discount: orderData.discount || 0,
+          total: orderData.total || 0,
+          paymentMethod: "PayPal",
+          transactionId: captureId || orderID,
+        });
+
+        return NextResponse.json({
+          status: "COMPLETED",
+          captureId,
+          paypalOrderId: orderID,
+          orderNumber,
+          whatsappUrl: whatsapp.url,
         });
       }
 

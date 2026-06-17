@@ -59,13 +59,6 @@ export const SUPPORTED_COUNTRIES = [
   { code: "BH", name: "Bahrain", flag: "🇧🇭" },
 ] as const;
 
-export const SHIPPING_METHODS = [
-  { id: "standard", name: "Standard Shipping", days: "10-14 days" },
-  { id: "express", name: "Express Shipping", days: "5-7 days" },
-  { id: "priority", name: "Priority Shipping", days: "3-5 days" },
-  { id: "overnight", name: "Overnight Shipping", days: "1-2 days" },
-] as const;
-
 // Country-to-zone mapping for quick reference
 export const COUNTRY_ZONES: Record<string, string> = {
   // Domestic
@@ -132,5 +125,5 @@ export const HERO_STATS = [
   { value: "5000+", label: "Customers" },
   { value: "50+", label: "Countries Served" },
   { value: "100%", label: "Authentic Batik" },
-  { value: "Free", label: "Worldwide Shipping" },
+  { value: "Fast", label: "Worldwide Shipping" },
 ] as const;

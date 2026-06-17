@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore";
-import { SUPPORTED_COUNTRIES, SHIPPING_METHODS } from "@/lib/constants";
+import { SUPPORTED_COUNTRIES } from "@/lib/constants";
 import toast from "react-hot-toast";
 
 // Products data with multiple images - fallback only
@@ -288,10 +288,35 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [activeTab, setActiveTab] = useState<"description" | "reviews" | "shipping">("description");
+  const [shippingRates, setShippingRates] = useState<{ carrier: string; serviceName: string; price: number; estimatedDays: string }[]>([]);
+  const [loadingRates, setLoadingRates] = useState(false);
 
   const addToCart = useCartStore((state) => state.addItem);
   const { addItem: addToWishlist, isInWishlist, removeItem: removeFromWishlist } = useWishlistStore();
   const inWishlist = isInWishlist(product.id);
+
+  // Fetch shipping rates when country changes
+  useEffect(() => {
+    if (!selectedCountry) {
+      setShippingRates([]);
+      return;
+    }
+    async function fetchRates() {
+      setLoadingRates(true);
+      try {
+        const res = await fetch(`/api/shipping/rates?country=${selectedCountry}&weight=0.5`);
+        if (res.ok) {
+          const data = await res.json();
+          setShippingRates(data.rates || []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch rates:", e);
+      } finally {
+        setLoadingRates(false);
+      }
+    }
+    fetchRates();
+  }, [selectedCountry]);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -556,20 +581,26 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
               </select>
               {selectedCountry && (
                 <div className="mt-4 space-y-2">
-                  {SHIPPING_METHODS.map((method) => (
+                  {loadingRates && (
+                    <p className="text-sm text-foreground/50">Loading rates...</p>
+                  )}
+                  {!loadingRates && shippingRates.map((rate, idx) => (
                     <div
-                      key={method.id}
+                      key={idx}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
                       <div>
-                        <p className="text-sm font-medium">{method.name}</p>
-                        <p className="text-xs text-foreground/50">{method.days}</p>
+                        <p className="text-sm font-medium">{rate.serviceName}</p>
+                        <p className="text-xs text-foreground/50">{rate.carrier} • {rate.estimatedDays}</p>
                       </div>
                       <span className="text-sm font-bold">
-                        {method.id === "standard" ? "Free" : `$${15 + Math.random() * 20 | 0}`}
+                        ${rate.price.toFixed(2)}
                       </span>
                     </div>
                   ))}
+                  {!loadingRates && shippingRates.length === 0 && (
+                    <p className="text-sm text-foreground/50">No rates available for this country.</p>
+                  )}
                 </div>
               )}
             </div>
@@ -578,7 +609,7 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
             <div className="grid grid-cols-3 gap-4 pt-4">
               <div className="text-center">
                 <Truck className="w-6 h-6 mx-auto text-secondary" />
-                <p className="text-xs text-foreground/50 mt-1">Free Shipping</p>
+                <p className="text-xs text-foreground/50 mt-1">Fast Shipping</p>
               </div>
               <div className="text-center">
                 <Shield className="w-6 h-6 mx-auto text-secondary" />
@@ -683,19 +714,26 @@ export default function ProductDetail({ slug }: ProductDetailProps) {
           {activeTab === "shipping" && (
             <div className="space-y-4">
               <p className="text-foreground/70">
-                We ship to over 50 countries worldwide. All orders include premium
-                packaging with a certificate of authenticity.
+                We ship to over 50 countries worldwide using DHL Express, JNE, and Pos Indonesia.
+                All orders include premium packaging with a certificate of authenticity.
               </p>
-              <div className="grid sm:grid-cols-2 gap-4 mt-6">
-                {SHIPPING_METHODS.map((method) => (
-                  <div key={method.id} className="glass-card-solid p-5">
-                    <h4 className="font-semibold">{method.name}</h4>
-                    <p className="text-sm text-foreground/50 mt-1">
-                      Estimated delivery: {method.days}
-                    </p>
-                  </div>
-                ))}
+              <div className="grid sm:grid-cols-3 gap-4 mt-6">
+                <div className="glass-card-solid p-5">
+                  <h4 className="font-semibold">DHL Express</h4>
+                  <p className="text-sm text-foreground/50 mt-1">International: 3-7 days</p>
+                </div>
+                <div className="glass-card-solid p-5">
+                  <h4 className="font-semibold">JNE</h4>
+                  <p className="text-sm text-foreground/50 mt-1">Domestic & ASEAN: 1-8 days</p>
+                </div>
+                <div className="glass-card-solid p-5">
+                  <h4 className="font-semibold">Pos Indonesia</h4>
+                  <p className="text-sm text-foreground/50 mt-1">Domestic & International EMS</p>
+                </div>
               </div>
+              <p className="text-sm text-foreground/50 mt-4">
+                Shipping rates are calculated at checkout based on your destination and package weight.
+              </p>
             </div>
           )}
         </div>
